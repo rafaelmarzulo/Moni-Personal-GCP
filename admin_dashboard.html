@@ -1,0 +1,305 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard Administrativo - {{ super() }}{% endblock %}
+
+{% block head_extra %}
+<style>
+  .dashboard-card {
+    background: rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+  }
+
+  .dashboard-card:hover {
+    background: rgba(255, 255, 255, 0.12) !important;
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(111, 66, 193, 0.25) !important;
+  }
+
+  .stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .stat-number {
+    font-size: 2.2rem;
+    font-weight: 700;
+    background: var(--gradient-gold);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .loading-skeleton {
+    background: linear-gradient(90deg, rgba(255,255,255,0.1) 25%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.1) 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+  }
+
+  @keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  .quick-action-btn {
+    border-radius: 15px !important;
+    padding: 1rem !important;
+    font-weight: 600 !important;
+    transition: all 0.3s ease !important;
+    border: 2px solid transparent !important;
+  }
+
+  .quick-action-btn:hover {
+    transform: translateY(-2px) !important;
+    border-color: var(--primary-gold) !important;
+  }
+
+  @media (max-width: 768px) {
+    .stat-number {
+      font-size: 1.8rem;
+    }
+
+    .stat-icon {
+      width: 50px;
+      height: 50px;
+      font-size: 1.2rem;
+    }
+
+    .quick-action-btn {
+      padding: 0.8rem !important;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="loadingOverlay" class="d-none">
+  <div class="d-flex justify-content-center">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Carregando...</span>
+    </div>
+  </div>
+</div>
+
+<div class="row mb-4">
+  <div class="col">
+    <h2 class="h3 mb-0">
+      <i class="bi bi-speedometer2 me-2"></i>
+      Dashboard Administrativo
+    </h2>
+    <p class="text-muted mb-0">Visão geral do sistema MoniPersonal</p>
+  </div>
+</div>
+
+<!-- Status Cards -->
+<div class="row g-4 mb-5" id="statsSection">
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="card dashboard-card h-100">
+      <div class="card-body text-center">
+        <div class="stat-icon bg-primary bg-opacity-20 mx-auto">
+          <i class="bi bi-people text-primary"></i>
+        </div>
+        <div class="stat-number" data-stat="alunos">--</div>
+        <small class="text-muted">Total de Alunos</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="card dashboard-card h-100">
+      <div class="card-body text-center">
+        <div class="stat-icon bg-success bg-opacity-20 mx-auto">
+          <i class="bi bi-check-circle text-success"></i>
+        </div>
+        <div class="stat-number" data-stat="avaliacoes">--</div>
+        <small class="text-muted">Total Avaliações</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="card dashboard-card h-100">
+      <div class="card-body text-center">
+        <div class="stat-icon bg-warning bg-opacity-20 mx-auto">
+          <i class="bi bi-activity text-warning"></i>
+        </div>
+        <div class="stat-number" data-stat="ativos">--</div>
+        <small class="text-muted">Alunos Ativos</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="card dashboard-card h-100">
+      <div class="card-body text-center">
+        <div class="stat-icon bg-info bg-opacity-20 mx-auto">
+          <i class="bi bi-calendar-week text-info"></i>
+        </div>
+        <div class="stat-number" data-stat="recentes">--</div>
+        <small class="text-muted">Avaliações Recentes</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-5">
+  <div class="col-12">
+    <h4 class="mb-3">
+      <i class="bi bi-lightning-charge me-2"></i>
+      Ações Rápidas
+    </h4>
+    <div class="row g-3">
+      <div class="col-12 col-md-6 col-lg-4">
+        <a href="/admin/alunos" class="btn btn-primary quick-action-btn w-100 d-flex align-items-center">
+          <i class="bi bi-people me-3 fs-4"></i>
+          <div class="text-start">
+            <div class="fw-bold">Gerenciar Alunos</div>
+            <small class="opacity-75">Ver todos os alunos cadastrados</small>
+          </div>
+        </a>
+      </div>
+
+      <div class="col-12 col-md-6 col-lg-4">
+        <a href="/formulario" class="btn btn-success quick-action-btn w-100 d-flex align-items-center">
+          <i class="bi bi-plus-circle me-3 fs-4"></i>
+          <div class="text-start">
+            <div class="fw-bold">Nova Avaliação</div>
+            <small class="opacity-75">Registrar nova avaliação física</small>
+          </div>
+        </a>
+      </div>
+
+      <div class="col-12 col-md-6 col-lg-4">
+        <button onclick="loadStats()" class="btn btn-info quick-action-btn w-100 d-flex align-items-center">
+          <i class="bi bi-arrow-repeat me-3 fs-4"></i>
+          <div class="text-start">
+            <div class="fw-bold">Atualizar Dados</div>
+            <small class="opacity-75">Recarregar estatísticas</small>
+          </div>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- System Status -->
+<div class="row">
+  <div class="col-12">
+    <div class="card dashboard-card">
+      <div class="card-header">
+        <h5 class="mb-0">
+          <i class="bi bi-gear me-2"></i>
+          Status do Sistema
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-12 col-md-6">
+            <div class="d-flex align-items-center">
+              <span class="badge bg-success rounded-pill me-3">Online</span>
+              <div>
+                <strong>Sistema Operacional</strong>
+                <br><small class="text-muted">Todos os serviços funcionando</small>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 col-md-6">
+            <div class="d-flex align-items-center">
+              <span class="badge bg-primary rounded-pill me-3">v2.0</span>
+              <div>
+                <strong>Versão Modular</strong>
+                <br><small class="text-muted">{{ message or "Sistema modularizado ativo" }}</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Loading state management
+function showLoading() {
+  document.getElementById('loadingOverlay').classList.remove('d-none');
+  document.getElementById('statsSection').classList.add('opacity-50');
+}
+
+function hideLoading() {
+  document.getElementById('loadingOverlay').classList.add('d-none');
+  document.getElementById('statsSection').classList.remove('opacity-50');
+}
+
+// Load statistics
+async function loadStats() {
+  showLoading();
+
+  try {
+    const response = await fetch('/admin/stats');
+    const data = await response.json();
+
+    if (data.error) {
+      console.error('Erro ao carregar estatísticas:', data.error);
+      return;
+    }
+
+    // Update stat cards with animation
+    updateStatCard('alunos', data.total_alunos || 0);
+    updateStatCard('avaliacoes', data.total_avaliacoes || 0);
+    updateStatCard('ativos', data.alunos_ativos || 0);
+    updateStatCard('recentes', data.avaliacoes_recentes || 0);
+
+  } catch (error) {
+    console.error('Erro ao carregar estatísticas:', error);
+  } finally {
+    setTimeout(hideLoading, 500); // Small delay for smooth UX
+  }
+}
+
+function updateStatCard(statName, value) {
+  const element = document.querySelector(`[data-stat="${statName}"]`);
+  if (element) {
+    // Add loading animation
+    element.classList.add('loading-skeleton');
+
+    setTimeout(() => {
+      element.textContent = value;
+      element.classList.remove('loading-skeleton');
+
+      // Add scale animation
+      element.style.transform = 'scale(1.1)';
+      setTimeout(() => {
+        element.style.transform = 'scale(1)';
+      }, 200);
+    }, 300);
+  }
+}
+
+// Load stats on page load
+document.addEventListener('DOMContentLoaded', function() {
+  loadStats();
+
+  // Auto-refresh every 30 seconds
+  setInterval(loadStats, 30000);
+});
+
+// Add smooth page transitions
+document.querySelectorAll('a[href^="/"]').forEach(link => {
+  link.addEventListener('click', function(e) {
+    if (!this.target || this.target === '_self') {
+      showLoading();
+    }
+  });
+});
+</script>
+{% endblock %}

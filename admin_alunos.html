@@ -1,0 +1,276 @@
+{% extends "admin_layout.html" %}
+{% block title %}Gerenciar Alunos • MoniPersonal{% endblock %}
+{% block page_title %}Gerenciar Alunos{% endblock %}
+{% block page_subtitle %}Visualize, gerencie e redefina senhas dos alunos registrados{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="card admin-card">
+      <div class="card-header brand-gradient text-white">
+        <h5 class="mb-0">
+          <i class="bi bi-people-fill me-2"></i>
+          Alunos Registrados
+        </h5>
+      </div>
+      <div class="card-body">
+        {% if alunos %}
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nome</th>
+                <th>Email</th>
+                <th>Telefone</th>
+                <th>Status</th>
+                <th>Data Registro</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for aluno in alunos %}
+              <tr>
+                <td>{{ aluno.id }}</td>
+                <td>
+                  <strong>{{ aluno.nome }}</strong>
+                </td>
+                <td>
+                  <i class="bi bi-envelope me-1"></i>
+                  {{ aluno.email }}
+                </td>
+                <td>
+                  {% if aluno.telefone %}
+                    <i class="bi bi-telephone me-1"></i>
+                    {{ aluno.telefone }}
+                  {% else %}
+                    <span class="text-muted">-</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if aluno.ativo %}
+                    <span class="badge bg-success">Ativo</span>
+                  {% else %}
+                    <span class="badge bg-danger">Inativo</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <small class="text-muted">
+                    {{ aluno.created_at.strftime('%d/%m/%Y %H:%M') if aluno.created_at else '-' }}
+                  </small>
+                </td>
+                <td>
+                  <div class="btn-group btn-group-sm">
+                    <a href="/admin/aluno/{{ aluno.nome }}" class="btn btn-outline-primary">
+                      <i class="bi bi-eye"></i>
+                      Ver Histórico
+                    </a>
+                    <button class="btn btn-outline-warning" onclick="resetarSenha({{ aluno.id }}, '{{ aluno.nome }}')">
+                      <i class="bi bi-key"></i>
+                      Reset Senha
+                    </button>
+                    {% if aluno.ativo %}
+                      <button class="btn btn-outline-danger" onclick="toggleStatus({{ aluno.id }}, false)">
+                        <i class="bi bi-person-x"></i>
+                        Desativar
+                      </button>
+                    {% else %}
+                      <button class="btn btn-outline-success" onclick="toggleStatus({{ aluno.id }}, true)">
+                        <i class="bi bi-person-check"></i>
+                        Ativar
+                      </button>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+          <i class="bi bi-people display-1 text-muted"></i>
+          <h4 class="text-muted mt-3">Nenhum aluno registrado</h4>
+          <p class="text-muted">Os alunos aparecerão aqui quando se registrarem no sistema.</p>
+          <a href="/registro" class="btn btn-primary">
+            <i class="bi bi-person-plus me-2"></i>
+            Criar Primeiro Aluno
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para Reset de Senha -->
+<div class="modal fade" id="resetSenhaModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-key me-2"></i>
+          Resetar Senha
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="resetSenhaForm">
+        <div class="modal-body">
+          <p>Resetar senha do aluno: <strong id="alunoNome"></strong></p>
+
+          <div class="mb-3">
+            <label class="form-label">Nova Senha</label>
+            <div class="input-group">
+              <input
+                type="password"
+                id="novaSenha"
+                name="nova_senha"
+                class="form-control"
+                placeholder="Digite a nova senha"
+                minlength="6"
+                required
+              >
+              <button class="btn btn-outline-secondary" type="button" onclick="toggleSenhaModal()">
+                <i class="bi bi-eye" id="toggleIconModal"></i>
+              </button>
+            </div>
+            <div class="form-text">A senha deve ter pelo menos 6 caracteres.</div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Confirmar Nova Senha</label>
+            <input
+              type="password"
+              id="confirmarSenha"
+              class="form-control"
+              placeholder="Confirme a nova senha"
+              required
+            >
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-warning">
+            <i class="bi bi-key me-2"></i>
+            Resetar Senha
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Toast para notificações -->
+<div class="toast-container position-fixed top-0 end-0 p-3">
+  <div id="successToast" class="toast" role="alert">
+    <div class="toast-header bg-success text-white">
+      <i class="bi bi-check-circle me-2"></i>
+      <strong class="me-auto">Sucesso</strong>
+      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+    </div>
+    <div class="toast-body" id="successMessage"></div>
+  </div>
+
+  <div id="errorToast" class="toast" role="alert">
+    <div class="toast-header bg-danger text-white">
+      <i class="bi bi-exclamation-triangle me-2"></i>
+      <strong class="me-auto">Erro</strong>
+      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+    </div>
+    <div class="toast-body" id="errorMessage"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let alunoIdAtual = null;
+
+// Toggle para mostrar/esconder senha no modal
+function toggleSenhaModal() {
+  const senha = document.getElementById('novaSenha');
+  const icon = document.getElementById('toggleIconModal');
+
+  if (senha.type === 'password') {
+    senha.type = 'text';
+    icon.className = 'bi bi-eye-slash';
+  } else {
+    senha.type = 'password';
+    icon.className = 'bi bi-eye';
+  }
+}
+
+// Abrir modal de reset de senha
+function resetarSenha(alunoId, nomeAluno) {
+  alunoIdAtual = alunoId;
+  document.getElementById('alunoNome').textContent = nomeAluno;
+  document.getElementById('novaSenha').value = '';
+  document.getElementById('confirmarSenha').value = '';
+
+  const modal = new bootstrap.Modal(document.getElementById('resetSenhaModal'));
+  modal.show();
+}
+
+// Enviar formulário de reset de senha
+document.getElementById('resetSenhaForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+
+  const novaSenha = document.getElementById('novaSenha').value;
+  const confirmarSenha = document.getElementById('confirmarSenha').value;
+
+  // Validações
+  if (novaSenha.length < 6) {
+    showError('A senha deve ter pelo menos 6 caracteres.');
+    return;
+  }
+
+  if (novaSenha !== confirmarSenha) {
+    showError('As senhas não coincidem.');
+    return;
+  }
+
+  try {
+    const formData = new FormData();
+    formData.append('nova_senha', novaSenha);
+
+    const response = await fetch(`/admin/reset-senha/${alunoIdAtual}`, {
+      method: 'POST',
+      body: formData
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      showSuccess(result.success);
+      bootstrap.Modal.getInstance(document.getElementById('resetSenhaModal')).hide();
+    } else {
+      showError(result.error || 'Erro ao resetar senha');
+    }
+  } catch (error) {
+    showError('Erro de conexão: ' + error.message);
+  }
+});
+
+// Funções para mostrar notificações
+function showSuccess(message) {
+  document.getElementById('successMessage').textContent = message;
+  const toast = new bootstrap.Toast(document.getElementById('successToast'));
+  toast.show();
+}
+
+function showError(message) {
+  document.getElementById('errorMessage').textContent = message;
+  const toast = new bootstrap.Toast(document.getElementById('errorToast'));
+  toast.show();
+}
+
+// Função para ativar/desativar aluno (placeholder)
+function toggleStatus(alunoId, ativar) {
+  const acao = ativar ? 'ativar' : 'desativar';
+  if (confirm(`Tem certeza que deseja ${acao} este aluno?`)) {
+    // Implementar posteriormente se necessário
+    showError('Funcionalidade de ativar/desativar será implementada em breve.');
+  }
+}
+</script>
+{% endblock %}

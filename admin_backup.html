@@ -1,0 +1,150 @@
+{% extends "admin_layout.html" %}
+
+{% block page_title %}Backup do Sistema{% endblock %}
+{% block page_subtitle %}Criar backup manual do banco de dados{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    {% if success %}
+    <div class="card admin-card border-success">
+      <div class="card-header bg-success text-white">
+        <h5 class="mb-0">
+          <i class="bi bi-check-circle-fill me-2"></i>
+          Backup Criado com Sucesso!
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="alert alert-success">
+          <h6><i class="bi bi-file-earmark-check me-2"></i>{{ backup_name }}</h6>
+          <p class="mb-0">{{ message }}</p>
+        </div>
+
+        <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+          <a href="/admin/backup" class="btn btn-success">
+            <i class="bi bi-arrow-clockwise me-1"></i>
+            Criar Outro Backup
+          </a>
+          <a href="/admin/alunos" class="btn btn-primary">
+            <i class="bi bi-house me-1"></i>
+            Voltar ao Painel
+          </a>
+        </div>
+
+        <div class="alert alert-info mt-3">
+          <i class="bi bi-lightbulb me-2"></i>
+          <strong>Dica:</strong> Recomendamos fazer backups regulares, especialmente antes de operações importantes como updates do sistema.
+        </div>
+      </div>
+    </div>
+
+    {% elif error %}
+    <div class="card admin-card border-danger">
+      <div class="card-header bg-danger text-white">
+        <h5 class="mb-0">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>
+          Erro ao Criar Backup
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="alert alert-danger">
+          <p class="mb-0">{{ error }}</p>
+        </div>
+
+        <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+          <a href="/admin/backup" class="btn btn-warning">
+            <i class="bi bi-arrow-clockwise me-1"></i>
+            Tentar Novamente
+          </a>
+          <a href="/admin/alunos" class="btn btn-secondary">
+            <i class="bi bi-house me-1"></i>
+            Voltar ao Painel
+          </a>
+        </div>
+      </div>
+    </div>
+
+    {% else %}
+    <!-- Formulário inicial para criar backup -->
+    <div class="card admin-card">
+      <div class="card-header brand-gradient text-white">
+        <h5 class="mb-0">
+          <i class="bi bi-shield-check me-2"></i>
+          Criar Backup Manual
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="alert alert-info">
+          <i class="bi bi-info-circle me-2"></i>
+          <strong>Sobre o Backup:</strong>
+          <p class="mb-0 mt-2">O backup criará uma cópia completa de todos os dados do sistema, incluindo:</p>
+          <ul class="mt-2 mb-0">
+            <li>Dados de todos os alunos cadastrados</li>
+            <li>Histórico completo de avaliações</li>
+            <li>Configurações do sistema</li>
+          </ul>
+        </div>
+
+        <form method="post" action="/admin/backup">
+          <div class="mb-3">
+            <label for="backup_comment" class="form-label">
+              <i class="bi bi-chat-left-text me-1"></i>
+              Comentário do Backup (opcional)
+            </label>
+            <input type="text"
+                   class="form-control"
+                   id="backup_comment"
+                   name="backup_comment"
+                   placeholder="Ex: Backup antes da atualização do sistema"
+                   maxlength="100">
+            <div class="form-text">Adicione uma descrição para identificar este backup futuramente.</div>
+          </div>
+
+          <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-success btn-lg">
+              <i class="bi bi-cloud-arrow-up me-2"></i>
+              Criar Backup Agora
+            </button>
+          </div>
+        </form>
+
+        <div class="alert alert-warning mt-4">
+          <i class="bi bi-clock me-2"></i>
+          <strong>Tempo Estimado:</strong> O processo pode levar alguns minutos dependendo do tamanho do banco de dados.
+        </div>
+
+        <div class="row mt-4">
+          <div class="col-md-6">
+            <h6><i class="bi bi-speedometer2 me-1"></i> Status do Sistema</h6>
+            <div class="text-muted small">
+              <div>Ambiente: <span class="badge bg-info">{{ environment|default('Produção') }}</span></div>
+              <div class="mt-1">Último backup: <span class="text-warning">Em desenvolvimento</span></div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <h6><i class="bi bi-hdd me-1"></i> Informações do Banco</h6>
+            <div class="text-muted small">
+              <div>Tipo: <span class="badge bg-primary">PostgreSQL</span></div>
+              <div class="mt-1">Status: <span class="text-success">Conectado</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Adicionar indicador de loading ao submeter o formulário
+document.querySelector('form')?.addEventListener('submit', function(e) {
+  const button = this.querySelector('button[type="submit"]');
+  if (button) {
+    button.innerHTML = '<i class="spinner-border spinner-border-sm me-2"></i>Criando Backup...';
+    button.disabled = true;
+  }
+});
+</script>
+{% endblock %}

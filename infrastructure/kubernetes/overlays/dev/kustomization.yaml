@@ -1,0 +1,33 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+bases:
+  - ../../base
+
+namespace: monipersonal
+
+commonLabels:
+  environment: dev
+
+patches:
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: monipersonal-web
+      spec:
+        replicas: 1
+    target:
+      kind: Deployment
+      name: monipersonal-web
+
+configMapGenerator:
+  - name: monipersonal-config
+    behavior: merge
+    literals:
+      - environment=development
+      - log_level=DEBUG
+
+images:
+  - name: gcr.io/PROJECT_ID/monipersonal
+    newTag: latest

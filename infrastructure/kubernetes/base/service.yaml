@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: monipersonal-web
+  namespace: monipersonal
+  labels:
+    app: monipersonal
+    component: web
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: http
+    protocol: TCP
+    name: http
+  selector:
+    app: monipersonal
+    component: web
+  sessionAffinity: None

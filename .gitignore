@@ -1,0 +1,143 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+*.manifest
+*.spec
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+htmlcov/
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.venv
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Environment files
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Terraform
+infrastructure/terraform/**/.terraform/
+infrastructure/terraform/**/.terraform.lock.hcl
+infrastructure/terraform/**/terraform.tfstate
+infrastructure/terraform/**/terraform.tfstate.backup
+infrastructure/terraform/**/*.tfvars
+!infrastructure/terraform/**/*.tfvars.example
+infrastructure/terraform/**/crash.log
+infrastructure/terraform/**/crash.*.log
+infrastructure/terraform/**/*.tfplan
+infrastructure/terraform/**/backend.tf
+!infrastructure/terraform/**/backend.tf.example
+
+# Terraform outputs
+infrastructure/outputs/
+*.json
+
+# GCP
+gcp-credentials.json
+service-account-key.json
+*-sa-key.json
+
+# Kubernetes
+kubeconfig
+*.kubeconfig
+kube-config
+
+# Docker
+docker-compose.override.yml
+.dockerignore.local
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Database
+*.sqlite
+*.db
+postgres_data/
+
+# Backup
+backups/
+*.backup
+*.bak
+
+# OS
+Thumbs.db
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+
+# Archives
+*.zip
+*.tar.gz
+*.rar
+
+# Temp files
+tmp/
+temp/
+*.tmp
+*.swp
+*.swo
+
+# SSL/TLS
+ssl/
+*.crt
+*.csr
+*.pem
+*.key
+*.p12
+
+# Sensitive data
+secrets/
+credentials/
+*.secret
+
+# Node modules (if any frontend tools)
+node_modules/
+
+# Editor backups
+*~
+\#*\#
+.\#*

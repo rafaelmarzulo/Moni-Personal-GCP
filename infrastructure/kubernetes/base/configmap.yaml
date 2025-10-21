@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: monipersonal-config
+  namespace: monipersonal
+  labels:
+    app: monipersonal
+data:
+  environment: "development"
+  log_level: "INFO"
+  max_connections: "100"
+  workers: "4"

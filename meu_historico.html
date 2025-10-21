@@ -1,0 +1,452 @@
+{% extends "base.html" %}
+
+{% block title %}Meu Histórico - {{ aluno.nome }} - {{ super() }}{% endblock %}
+
+{% block head_extra %}
+<style>
+  .personal-header {
+    background: var(--gradient-main);
+    border-radius: 20px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .personal-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 150px;
+    height: 150px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    transform: translate(30px, -30px);
+  }
+
+  .evaluation-card {
+    background: rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+    margin-bottom: 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .evaluation-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--gradient-main);
+  }
+
+  .evaluation-card:hover {
+    background: rgba(255, 255, 255, 0.12) !important;
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(111, 66, 193, 0.25) !important;
+  }
+
+  .imc-indicator {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin: 0 auto;
+  }
+
+  .imc-baixo {
+    background: rgba(54, 162, 235, 0.2);
+    color: #36a2eb;
+    border: 2px solid #36a2eb;
+  }
+  .imc-normal {
+    background: rgba(75, 192, 192, 0.2);
+    color: #4bc0c0;
+    border: 2px solid #4bc0c0;
+  }
+  .imc-sobrepeso {
+    background: rgba(255, 206, 86, 0.2);
+    color: #ffce56;
+    border: 2px solid #ffce56;
+  }
+  .imc-obeso {
+    background: rgba(255, 99, 132, 0.2);
+    color: #ff6384;
+    border: 2px solid #ff6384;
+  }
+
+  .progress-section {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .metric-card {
+    text-align: center;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 15px;
+    transition: all 0.3s ease;
+  }
+
+  .metric-card:hover {
+    background: rgba(255, 255, 255, 0.12);
+    transform: translateY(-2px);
+  }
+
+  .metric-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-gold);
+  }
+
+  .success-alert {
+    background: rgba(75, 192, 192, 0.1) !important;
+    border: 1px solid rgba(75, 192, 192, 0.3) !important;
+    color: #4bc0c0 !important;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 4rem 1rem;
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .empty-state i {
+    font-size: 5rem;
+    opacity: 0.3;
+    margin-bottom: 1rem;
+  }
+
+  @media (max-width: 768px) {
+    .personal-header {
+      padding: 1.5rem;
+    }
+
+    .imc-indicator {
+      width: 50px;
+      height: 50px;
+      font-size: 0.8rem;
+    }
+
+    .metric-value {
+      font-size: 1.2rem;
+    }
+
+    .evaluation-card {
+      margin-bottom: 1rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .personal-header {
+      padding: 1rem;
+    }
+
+    .progress-section {
+      padding: 1rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Success message -->
+{% if request.query_params.get('success') %}
+  <div class="alert success-alert alert-dismissible fade show" role="alert">
+    <i class="bi bi-check-circle me-2"></i>
+    <strong>Sucesso!</strong> Sua nova avaliação foi registrada com sucesso.
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+{% endif %}
+
+<!-- Personal Header -->
+<div class="personal-header text-white">
+  <div class="row align-items-center">
+    <div class="col-12 col-md-8">
+      <h2 class="h3 mb-3">
+        <i class="bi bi-person-heart me-2"></i>
+        Meu Histórico Pessoal
+      </h2>
+      <div class="row g-3">
+        <div class="col-12 col-sm-6">
+          <small class="opacity-75">Bem-vindo(a)</small>
+          <div class="fw-semibold fs-5">{{ aluno.nome }}</div>
+        </div>
+        <div class="col-12 col-sm-6">
+          <small class="opacity-75">Total de Avaliações</small>
+          <div class="fw-semibold fs-5">{{ total_avaliacoes }} registros</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-md-4 text-center text-md-end mt-3 mt-md-0">
+      <a href="/formulario" class="btn btn-light btn-lg">
+        <i class="bi bi-plus-circle me-2"></i>
+        Nova Avaliação
+      </a>
+    </div>
+  </div>
+</div>
+
+{% if avaliacoes %}
+  <!-- Progress Overview -->
+  <div class="progress-section">
+    <h5 class="mb-4 text-center">
+      <i class="bi bi-graph-up me-2"></i>
+      Resumo do seu Progresso
+    </h5>
+    <div class="row g-3">
+      {% if avaliacoes|length > 0 %}
+        {% set latest = avaliacoes[0] %}
+        {% set oldest = avaliacoes[-1] if avaliacoes|length > 1 else avaliacoes[0] %}
+
+        <div class="col-6 col-md-3">
+          <div class="metric-card">
+            <div class="metric-value">{{ "%.1f"|format(latest.peso) }}</div>
+            <small class="text-muted">Peso Atual (kg)</small>
+          </div>
+        </div>
+
+        <div class="col-6 col-md-3">
+          <div class="metric-card">
+            <div class="metric-value">{{ "%.1f"|format(latest.imc) if latest.imc else 'N/A' }}</div>
+            <small class="text-muted">IMC Atual</small>
+          </div>
+        </div>
+
+        {% if avaliacoes|length > 1 %}
+          <div class="col-6 col-md-3">
+            <div class="metric-card">
+              {% set peso_diff = latest.peso - oldest.peso %}
+              <div class="metric-value {% if peso_diff > 0 %}text-warning{% elif peso_diff < 0 %}text-success{% else %}text-info{% endif %}">
+                {{ "%+.1f"|format(peso_diff) }}
+              </div>
+              <small class="text-muted">Variação Peso (kg)</small>
+            </div>
+          </div>
+        {% endif %}
+
+        <div class="col-6 col-md-3">
+          <div class="metric-card">
+            <div class="metric-value text-primary">{{ avaliacoes|length }}</div>
+            <small class="text-muted">Avaliações</small>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Evaluations History -->
+  <div class="row">
+    <div class="col-12">
+      <h4 class="mb-4">
+        <i class="bi bi-calendar-event me-2"></i>
+        Minhas Avaliações
+      </h4>
+
+      {% for avaliacao in avaliacoes %}
+        <div class="evaluation-card card">
+          <div class="card-body">
+            <div class="row g-3 align-items-center">
+              <!-- Date -->
+              <div class="col-12 col-sm-6 col-md-3">
+                <div class="d-flex flex-column">
+                  <strong class="text-primary fs-5">
+                    {% if avaliacao.data_local %}
+                      {{ avaliacao.data_local.strftime('%d/%m/%Y') }}
+                    {% else %}
+                      {{ avaliacao.data_avaliacao.strftime('%d/%m/%Y') if avaliacao.data_avaliacao else 'Data não informada' }}
+                    {% endif %}
+                  </strong>
+                  <small class="text-muted">
+                    {% if avaliacao.data_local %}
+                      {{ avaliacao.data_local.strftime('%H:%M') }}
+                    {% elif avaliacao.data_avaliacao %}
+                      {{ avaliacao.data_avaliacao.strftime('%H:%M') }}
+                    {% endif %}
+                  </small>
+                </div>
+              </div>
+
+              <!-- Physical Metrics -->
+              <div class="col-6 col-sm-3 col-md-2">
+                <small class="text-muted d-block">Peso</small>
+                <strong class="fs-5">{{ "%.1f"|format(avaliacao.peso) }}</strong>
+                <small class="text-muted"> kg</small>
+              </div>
+
+              <div class="col-6 col-sm-3 col-md-2">
+                <small class="text-muted d-block">Altura</small>
+                <strong class="fs-5">{{ "%.0f"|format(avaliacao.altura) }}</strong>
+                <small class="text-muted"> cm</small>
+              </div>
+
+              <!-- IMC Indicator -->
+              <div class="col-12 col-sm-6 col-md-2">
+                {% if avaliacao.imc %}
+                  {% set imc_class = "imc-normal" %}
+                  {% set imc_label = "Normal" %}
+                  {% if avaliacao.imc < 18.5 %}
+                    {% set imc_class = "imc-baixo" %}
+                    {% set imc_label = "Baixo" %}
+                  {% elif avaliacao.imc >= 25 and avaliacao.imc < 30 %}
+                    {% set imc_class = "imc-sobrepeso" %}
+                    {% set imc_label = "Sobrepeso" %}
+                  {% elif avaliacao.imc >= 30 %}
+                    {% set imc_class = "imc-obeso" %}
+                    {% set imc_label = "Obesidade" %}
+                  {% endif %}
+                  <div class="text-center">
+                    <div class="imc-indicator {{ imc_class }}">
+                      {{ "%.1f"|format(avaliacao.imc) }}
+                    </div>
+                    <small class="text-muted d-block mt-1">{{ imc_label }}</small>
+                  </div>
+                {% else %}
+                  <div class="text-center text-muted">
+                    <div class="imc-indicator border">N/A</div>
+                    <small class="d-block mt-1">IMC</small>
+                  </div>
+                {% endif %}
+              </div>
+
+              <!-- Observations -->
+              {% if avaliacao.observacoes %}
+                <div class="col-12 col-md-3">
+                  <small class="text-muted d-block">Observações</small>
+                  <div class="mt-1">
+                    {% if avaliacao.observacoes|length > 60 %}
+                      <span class="d-inline-block" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ avaliacao.observacoes }}">
+                        {{ avaliacao.observacoes[:60] }}...
+                      </span>
+                    {% else %}
+                      {{ avaliacao.observacoes }}
+                    {% endif %}
+                  </div>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="row mt-4">
+    <div class="col-12 text-center">
+      <div class="d-flex flex-wrap gap-3 justify-content-center">
+        <a href="/formulario" class="btn btn-primary btn-lg">
+          <i class="bi bi-plus-circle me-2"></i>
+          Nova Avaliação
+        </a>
+        <a href="/perfil" class="btn btn-outline-light">
+          <i class="bi bi-person me-2"></i>
+          Meu Perfil
+        </a>
+        <button class="btn btn-success" onclick="exportMyData()">
+          <i class="bi bi-download me-2"></i>
+          Exportar Dados
+        </button>
+      </div>
+    </div>
+  </div>
+
+{% else %}
+  <!-- Empty State -->
+  <div class="empty-state">
+    <i class="bi bi-clipboard-plus display-1 mb-4"></i>
+    <h3>Que tal registrar sua primeira avaliação?</h3>
+    <p class="lead mb-4">Comece agora a acompanhar seu progresso físico!</p>
+    <a href="/formulario" class="btn btn-primary btn-lg">
+      <i class="bi bi-plus-circle me-2"></i>
+      Fazer Minha Primeira Avaliação
+    </a>
+  </div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Export functionality
+function exportMyData() {
+  // Show loading state
+  const btn = event.target;
+  const originalText = btn.innerHTML;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Exportando...';
+  btn.disabled = true;
+
+  // Simulate export process
+  setTimeout(() => {
+    alert('Funcionalidade de exportação será implementada em breve!\n\nVocê poderá exportar seus dados em formato PDF ou CSV.');
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+  }, 2000);
+}
+
+// Initialize tooltips
+document.addEventListener('DOMContentLoaded', function() {
+  // Bootstrap tooltips
+  var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+  var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl);
+  });
+
+  // Animate cards on scroll
+  const observerOptions = {
+    threshold: 0.1,
+    rootMargin: '0px 0px -50px 0px'
+  };
+
+  const observer = new IntersectionObserver(function(entries) {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, observerOptions);
+
+  document.querySelectorAll('.evaluation-card').forEach((card, index) => {
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(30px)';
+    card.style.transition = `opacity 0.6s ease ${index * 0.1}s, transform 0.6s ease ${index * 0.1}s`;
+    observer.observe(card);
+  });
+
+  // Add loading states to navigation links
+  document.querySelectorAll('a[href^="/"]').forEach(link => {
+    link.addEventListener('click', function(e) {
+      if (!this.target || this.target === '_self') {
+        if (this.classList.contains('btn')) {
+          const original = this.innerHTML;
+          this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>' + this.textContent;
+          this.style.pointerEvents = 'none';
+        }
+      }
+    });
+  });
+
+  // Auto-hide success alerts
+  setTimeout(() => {
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+      if (alert.classList.contains('show')) {
+        const bsAlert = new bootstrap.Alert(alert);
+        bsAlert.close();
+      }
+    });
+  }, 5000);
+});
+</script>
+{% endblock %}

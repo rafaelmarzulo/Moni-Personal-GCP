@@ -1,0 +1,41 @@
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://monipersonal_user:monipersonal_pass@db:5432/monipersonal
+    depends_on:
+      - db
+    restart: unless-stopped
+    volumes:
+      - ./static:/app/static
+      - ./templates:/app/templates
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: monipersonal
+      POSTGRES_USER: monipersonal_user
+      POSTGRES_PASSWORD: monipersonal_pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/ssl/private
+    depends_on:
+      - web
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

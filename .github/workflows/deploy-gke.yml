@@ -1,0 +1,111 @@
+name: Deploy to GKE
+
+on:
+  workflow_run:
+    workflows: ["Docker Build & Push"]
+    types:
+      - completed
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+
+env:
+  GKE_CLUSTER: monipersonal-dev
+  GKE_ZONE: us-central1-a
+  DEPLOYMENT_NAME: monipersonal-web
+  IMAGE_NAME: monipersonal
+
+jobs:
+  deploy:
+    name: Deploy to GKE
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.event.inputs.environment || 'dev' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Install gke-gcloud-auth-plugin
+        run: |
+          gcloud components install gke-gcloud-auth-plugin
+
+      - name: Get GKE credentials
+        run: |
+          gcloud container clusters get-credentials ${{ env.GKE_CLUSTER }} \
+            --zone ${{ env.GKE_ZONE }} \
+            --project ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Install kustomize
+        run: |
+          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+          sudo mv kustomize /usr/local/bin/
+
+      - name: Update image tag in kustomization
+        run: |
+          cd infrastructure/kubernetes/overlays/${{ github.event.inputs.environment || 'dev' }}
+          kustomize edit set image \
+            gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ env.IMAGE_NAME }}=gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      - name: Deploy to GKE
+        run: |
+          kustomize build infrastructure/kubernetes/overlays/${{ github.event.inputs.environment || 'dev' }} | kubectl apply -f -
+
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/${{ env.DEPLOYMENT_NAME }} -n monipersonal --timeout=5m
+
+      - name: Verify deployment
+        run: |
+          kubectl get pods -n monipersonal -l app=monipersonal
+          kubectl get services -n monipersonal
+
+      - name: Run smoke tests
+        run: |
+          # Get the external IP
+          EXTERNAL_IP=$(kubectl get service monipersonal-web -n monipersonal -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          echo "Service URL: http://$EXTERNAL_IP"
+
+          # Wait for service to be ready
+          sleep 30
+
+          # Health check
+          curl -f http://$EXTERNAL_IP/health || exit 1
+
+      - name: Notify deployment status
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const status = '${{ job.status }}';
+            const environment = '${{ github.event.inputs.environment || 'dev' }}';
+            const message = status === 'success'
+              ? `✅ Successfully deployed to ${environment}`
+              : `❌ Deployment to ${environment} failed`;
+
+            github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.sha,
+              state: status === 'success' ? 'success' : 'failure',
+              context: `Deploy to ${environment}`,
+              description: message
+            });

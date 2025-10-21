@@ -1,0 +1,192 @@
+{% extends "admin_layout.html" %}
+{% block title %}Relatórios • MoniPersonal{% endblock %}
+{% block page_title %}Relatórios e Estatísticas{% endblock %}
+{% block page_subtitle %}Dashboard com métricas e informações do sistema{% endblock %}
+
+{% block content %}
+<!-- Cards de Estatísticas -->
+<div class="row mb-4">
+  <div class="col-md-6 col-lg-3">
+    <div class="card admin-card text-center">
+      <div class="card-body">
+        <i class="bi bi-people-fill display-4 text-primary"></i>
+        <h3 class="mt-3 mb-1">{{ total_alunos }}</h3>
+        <p class="text-muted mb-0">Alunos Ativos</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6 col-lg-3">
+    <div class="card admin-card text-center">
+      <div class="card-body">
+        <i class="bi bi-clipboard-data-fill display-4 text-success"></i>
+        <h3 class="mt-3 mb-1">{{ total_avaliacoes }}</h3>
+        <p class="text-muted mb-0">Avaliações Total</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6 col-lg-3">
+    <div class="card admin-card text-center">
+      <div class="card-body">
+        <i class="bi bi-graph-up display-4 text-warning"></i>
+        <h3 class="mt-3 mb-1">{{ (total_avaliacoes / total_alunos)|round(1) if total_alunos > 0 else 0 }}</h3>
+        <p class="text-muted mb-0">Média por Aluno</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6 col-lg-3">
+    <div class="card admin-card text-center">
+      <div class="card-body">
+        <i class="bi bi-calendar-check display-4 text-info"></i>
+        <h3 class="mt-3 mb-1">Hoje</h3>
+        <p class="text-muted mb-0">Última Avaliação</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <!-- Alunos Mais Ativos -->
+  <div class="col-lg-6">
+    <div class="card admin-card">
+      <div class="card-header brand-gradient text-white">
+        <h5 class="mb-0">
+          <i class="bi bi-trophy-fill me-2"></i>
+          Alunos Mais Ativos
+        </h5>
+      </div>
+      <div class="card-body">
+        {% if alunos_ativos %}
+        <div class="table-responsive">
+          <table class="table table-sm">
+            <thead>
+              <tr>
+                <th>Posição</th>
+                <th>Aluno</th>
+                <th>Avaliações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for aluno in alunos_ativos %}
+              <tr>
+                <td>
+                  {% if loop.index == 1 %}
+                    <i class="bi bi-trophy-fill text-warning"></i>
+                  {% elif loop.index == 2 %}
+                    <i class="bi bi-award-fill text-secondary"></i>
+                  {% elif loop.index == 3 %}
+                    <i class="bi bi-medal-fill text-danger"></i>
+                  {% else %}
+                    <span class="badge bg-primary">{{ loop.index }}</span>
+                  {% endif %}
+                </td>
+                <td><strong>{{ aluno[0] }}</strong></td>
+                <td>
+                  <span class="badge bg-success">{{ aluno[1] }}</span>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="text-center py-3">
+          <i class="bi bi-graph-up text-muted"></i>
+          <p class="text-muted mb-0">Dados insuficientes</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Últimas Avaliações -->
+  <div class="col-lg-6">
+    <div class="card admin-card">
+      <div class="card-header brand-gradient text-white">
+        <h5 class="mb-0">
+          <i class="bi bi-clock-fill me-2"></i>
+          Últimas Avaliações
+        </h5>
+      </div>
+      <div class="card-body">
+        {% if ultimas_avaliacoes %}
+        <div class="table-responsive">
+          <table class="table table-sm">
+            <thead>
+              <tr>
+                <th>Aluno</th>
+                <th>Data</th>
+                <th>Peso</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for avaliacao in ultimas_avaliacoes %}
+              <tr>
+                <td><strong>{{ avaliacao.nome }}</strong></td>
+                <td>
+                  <small>{{ avaliacao.data.strftime('%d/%m') if avaliacao.data else 'N/A' }}</small>
+                </td>
+                <td>
+                  {% if avaliacao.peso_kg %}
+                    <span class="badge bg-info">{{ avaliacao.peso_kg }}kg</span>
+                  {% else %}
+                    <span class="text-muted">-</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="text-center py-3">
+          <i class="bi bi-clock text-muted"></i>
+          <p class="text-muted mb-0">Nenhuma avaliação recente</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Ações Rápidas -->
+<div class="row mt-4">
+  <div class="col-12">
+    <div class="card admin-card">
+      <div class="card-header brand-gradient text-white">
+        <h5 class="mb-0">
+          <i class="bi bi-lightning-fill me-2"></i>
+          Ações Rápidas
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-3">
+            <a href="/admin/avaliacoes" class="btn btn-outline-primary w-100 mb-2">
+              <i class="bi bi-clipboard-data me-2"></i>
+              Ver Todas Avaliações
+            </a>
+          </div>
+          <div class="col-md-3">
+            <a href="/admin/alunos" class="btn btn-outline-success w-100 mb-2">
+              <i class="bi bi-people me-2"></i>
+              Gerenciar Alunos
+            </a>
+          </div>
+          <div class="col-md-3">
+            <a href="/formulario" class="btn btn-outline-warning w-100 mb-2">
+              <i class="bi bi-plus-circle me-2"></i>
+              Nova Avaliação
+            </a>
+          </div>
+          <div class="col-md-3">
+            <a href="/debug/logs" class="btn btn-outline-info w-100 mb-2">
+              <i class="bi bi-bug me-2"></i>
+              Ver Logs Sistema
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

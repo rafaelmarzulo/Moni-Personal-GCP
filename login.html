@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+{% block title %}Login • MoniPersonal{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6 col-lg-5">
+    <div class="card">
+      <div class="card-header brand-gradient text-white text-center">
+        <h5 class="mb-0">
+          <i class="bi bi-lock-fill me-2"></i>
+          Acesso ao Sistema
+        </h5>
+      </div>
+      <div class="card-body p-4">
+        {% if error %}
+        <div class="alert alert-danger">
+          <i class="bi bi-exclamation-triangle me-2"></i>
+          {{ error }}
+        </div>
+        {% endif %}
+
+        <form method="post" action="/login">
+          <input type="hidden" name="user_type" value="{{ user_type or 'aluno' }}">
+
+          <div class="mb-3">
+            <label class="form-label">
+              <i class="bi bi-envelope me-1"></i>
+              E-mail
+            </label>
+            <input
+              type="email"
+              name="email"
+              id="email"
+              class="form-control"
+              placeholder="seu@email.com"
+              required
+              autofocus
+              autocomplete="email"
+            >
+            <div class="invalid-feedback" id="email-error"></div>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label">
+              <i class="bi bi-key me-1"></i>
+              Senha
+            </label>
+            <div class="input-group">
+              <input
+                type="password"
+                name="password"
+                id="password"
+                class="form-control"
+                placeholder="Digite sua senha"
+                required
+                autocomplete="current-password"
+                minlength="6"
+              >
+              <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                <i class="bi bi-eye" id="toggleIcon"></i>
+              </button>
+            </div>
+            <div class="invalid-feedback" id="password-error"></div>
+          </div>
+
+          <div class="d-grid gap-2">
+            <button class="btn btn-primary" type="submit">
+              <i class="bi bi-box-arrow-in-right me-2"></i>
+              Entrar no Sistema
+            </button>
+            <a class="btn btn-outline-success" href="/registro">
+              <i class="bi bi-person-plus me-2"></i>
+              Criar Nova Conta
+            </a>
+            <a class="btn btn-outline-secondary btn-sm" href="/login?user_type=admin">
+              <i class="bi bi-gear me-2"></i>
+              Acesso Administrativo
+            </a>
+          </div>
+        </form>
+
+        <hr class="my-4">
+
+        <div class="text-center">
+          <small class="text-muted">
+            <i class="bi bi-shield-check me-1"></i>
+            Sistema seguro MoniPersonal
+          </small>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Toggle para mostrar/esconder senha
+document.getElementById('togglePassword').addEventListener('click', function() {
+  const password = document.getElementById('password');
+  const toggleIcon = document.getElementById('toggleIcon');
+
+  if (password.type === 'password') {
+    password.type = 'text';
+    toggleIcon.className = 'bi bi-eye-slash';
+  } else {
+    password.type = 'password';
+    toggleIcon.className = 'bi bi-eye';
+  }
+});
+
+// Validação do formulário
+document.querySelector('form').addEventListener('submit', function(e) {
+  let isValid = true;
+
+  // Reset estados de erro
+  document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+
+  // Validar email
+  const email = document.getElementById('email');
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if (!email.value || !emailRegex.test(email.value)) {
+    email.classList.add('is-invalid');
+    document.getElementById('email-error').textContent = 'Por favor, insira um e-mail válido.';
+    isValid = false;
+  }
+
+  // Validar senha
+  const password = document.getElementById('password');
+  if (!password.value || password.value.length < 6) {
+    password.classList.add('is-invalid');
+    document.getElementById('password-error').textContent = 'A senha deve ter pelo menos 6 caracteres.';
+    isValid = false;
+  }
+
+  if (!isValid) {
+    e.preventDefault();
+    // Focar no primeiro campo com erro
+    document.querySelector('.is-invalid')?.focus();
+  }
+});
+
+// Limpar erros quando o usuário começar a digitar
+document.getElementById('email').addEventListener('input', function() {
+  this.classList.remove('is-invalid');
+});
+
+document.getElementById('password').addEventListener('input', function() {
+  this.classList.remove('is-invalid');
+});
+</script>
+{% endblock %}

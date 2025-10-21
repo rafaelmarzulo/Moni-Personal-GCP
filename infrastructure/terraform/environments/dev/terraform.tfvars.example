@@ -1,0 +1,17 @@
+# ============================================================================
+# TERRAFORM VARIABLES - DEV ENVIRONMENT
+# Copy this file to terraform.tfvars and fill with your values
+# ============================================================================
+
+# GCP Project Configuration
+project_id   = "your-gcp-project-id"        # REQUIRED: Your GCP project ID
+project_name = "monipersonal"                # Project name for resource naming
+environment  = "dev"                         # Environment name
+
+# Region and Zone
+region = "us-central1"       # GCP region
+zone   = "us-central1-a"     # GCP zone (for zonal cluster)
+
+# Example with cost optimization for dev:
+# region = "us-central1"     # Use closest region to reduce latency
+# zone   = "us-central1-a"   # Single zone is cheaper for dev

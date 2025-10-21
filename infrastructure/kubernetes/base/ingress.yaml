@@ -1,0 +1,30 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: monipersonal-ingress
+  namespace: monipersonal
+  labels:
+    app: monipersonal
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/limit-rps: "10"
+spec:
+  tls:
+  - hosts:
+    - monipersonal.example.com # Replace with actual domain
+    secretName: monipersonal-tls
+  rules:
+  - host: monipersonal.example.com # Replace with actual domain
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: monipersonal-web
+            port:
+              number: 80

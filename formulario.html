@@ -1,0 +1,785 @@
+{% extends "base.html" %}
+
+{% block title %}Formulário • Sistema de Reavaliação Física MoniPersonal{% endblock %}
+
+{% block head_extra %}
+<style>
+  .form-section {
+    background: rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+  }
+
+  .form-section:hover {
+    background: rgba(255, 255, 255, 0.12) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(111, 66, 193, 0.2) !important;
+  }
+
+  .form-floating {
+    position: relative;
+  }
+
+  .form-control:focus {
+    border-color: var(--primary-purple) !important;
+    box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25) !important;
+  }
+
+  .loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+  }
+
+  .loading-spinner {
+    width: 60px;
+    height: 60px;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-top: 4px solid var(--primary-gold);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .progress-indicator {
+    background: rgba(255, 255, 255, 0.1);
+    height: 4px;
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 2rem;
+  }
+
+  .progress-bar {
+    background: var(--gradient-main);
+    height: 100%;
+    width: 0%;
+    transition: width 0.3s ease;
+  }
+
+  .section-indicator {
+    position: sticky;
+    top: 1rem;
+    z-index: 100;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  @media (max-width: 768px) {
+    .card-header .d-flex {
+      flex-direction: column;
+      text-align: center;
+    }
+
+    .card-header .text-end {
+      text-align: center !important;
+      margin-top: 1rem;
+    }
+
+    .form-control, .form-select {
+      font-size: 16px !important; /* Prevents iOS zoom */
+    }
+
+    .btn-group-vertical .btn {
+      margin-bottom: 0.5rem;
+    }
+
+    .section-indicator {
+      position: relative;
+      text-align: center;
+    }
+  }
+
+  .input-group-text {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+  }
+
+  .form-check-input:checked {
+    background-color: var(--primary-purple) !important;
+    border-color: var(--primary-purple) !important;
+  }
+
+  .alert-info {
+    background: rgba(54, 162, 235, 0.1) !important;
+    border: 1px solid rgba(54, 162, 235, 0.3) !important;
+    color: #36a2eb !important;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="text-center">
+    <div class="loading-spinner"></div>
+    <div class="mt-3 text-white">
+      <strong>Enviando sua avaliação...</strong>
+      <div class="mt-1">Por favor, aguarde</div>
+    </div>
+  </div>
+</div>
+
+<!-- Progress Indicator -->
+<div class="progress-indicator" id="progressIndicator">
+  <div class="progress-bar" id="progressBar"></div>
+</div>
+
+<!-- Section Indicator -->
+<div class="section-indicator text-center" id="sectionIndicator">
+  <i class="bi bi-info-circle me-2"></i>
+  Seção 1 de 4: Informações Básicas
+</div>
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header brand-gradient text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="bi bi-clipboard-plus me-2"></i>
+                        Formulário de Reavaliação Física
+                    </h4>
+                    <div class="text-end">
+                        <small class="d-block">Bem-vindo(a)</small>
+                        <strong>{{ aluno.nome if aluno else 'Usuário' }}</strong>
+                        <div class="mt-1">
+                            <a href="/logout" class="btn btn-outline-light btn-sm">
+                                <i class="bi bi-box-arrow-right me-1"></i>
+                                Sair
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body">
+                {% if error %}
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    {{ error }}
+                </div>
+                {% endif %}
+
+                <!-- Seletor de Aluno (somente para admin) -->
+                {% if is_admin %}
+                <div class="card mb-4 border-warning">
+                    <div class="card-header bg-warning text-dark">
+                        <h6 class="mb-0">
+                            <i class="bi bi-person-gear me-2"></i>
+                            Seleção de Aluno (Admin)
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <label for="admin_aluno_select" class="form-label">Selecione o aluno para criar a avaliação:</label>
+                                <select class="form-select" id="admin_aluno_select" onchange="redirectToFormulario()">
+                                    <option value="">-- Selecione um aluno --</option>
+                                    {% for aluno_item in alunos %}
+                                    <option value="{{ aluno_item.id }}"
+                                            {% if selected_aluno_id == aluno_item.id %}selected{% endif %}>
+                                        {{ aluno_item.nome }} ({{ aluno_item.email }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <button type="button" class="btn btn-outline-secondary" onclick="redirectToFormulario()">
+                                    <i class="bi bi-arrow-clockwise me-1"></i>
+                                    Carregar
+                                </button>
+                            </div>
+                        </div>
+                        {% if not aluno %}
+                        <div class="alert alert-info mt-3 mb-0">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Você deve selecionar um aluno antes de preencher o formulário.
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <script>
+                function redirectToFormulario() {
+                    const select = document.getElementById('admin_aluno_select');
+                    const alunoId = select.value;
+                    if (alunoId) {
+                        window.location.href = `/formulario?aluno_id=${alunoId}`;
+                    } else {
+                        window.location.href = '/formulario';
+                    }
+                }
+                </script>
+                {% endif %}
+
+                <!-- Informações do Aluno -->
+                <div class="alert alert-info mb-4">
+                    <h6 class="alert-heading">
+                        <i class="bi bi-person-check me-2"></i>
+                        Dados do Aluno
+                    </h6>
+                    <p class="mb-1"><strong>Nome:</strong> {{ aluno.nome if aluno else 'Não informado' }}</p>
+                    <p class="mb-0"><strong>Email:</strong> {{ aluno.email if aluno else 'Não informado' }}</p>
+                </div>
+
+                <form method="post" action="/formulario" id="avaliacaoForm" onsubmit="handleFormSubmit(event)">
+                    <!-- Campo hidden para admin enviar ID do aluno selecionado -->
+                    {% if is_admin and aluno %}
+                    <input type="hidden" name="admin_aluno_id" value="{{ aluno.id }}">
+                    {% endif %}
+
+                    <!-- Seção de Medidas Corporais -->
+                    <div class="card form-section mb-4" data-section="1">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-rulers me-2"></i>
+                                Medidas Corporais
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- Dados Básicos -->
+                            <div class="row mb-4">
+                                <div class="col-md-12">
+                                    <h6 class="text-primary mb-3">
+                                        <i class="bi bi-speedometer2 me-1"></i>
+                                        Dados Básicos
+                                    </h6>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="form-floating">
+                                        <input type="number" step="0.1" class="form-control" id="peso" name="peso"
+                                               placeholder="70.5" required>
+                                        <label for="peso">
+                                            <i class="bi bi-speedometer me-2"></i>Peso (kg) *
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="form-floating">
+                                        <input type="number" step="0.1" class="form-control" id="altura" name="altura"
+                                               placeholder="165.0" required>
+                                        <label for="altura">
+                                            <i class="bi bi-arrows-vertical me-2"></i>Altura (cm) *
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Circunferências Essenciais -->
+                            <div class="row mb-4">
+                                <div class="col-md-12">
+                                    <h6 class="text-primary mb-3">
+                                        <i class="bi bi-circle me-1"></i>
+                                        Circunferências Essenciais (cm)
+                                    </h6>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="circunferencia_cintura" class="form-label">Cintura *</label>
+                                    <input type="number" step="0.1" class="form-control" id="circunferencia_cintura"
+                                           name="circunferencia_cintura" placeholder="80.0" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="circunferencia_quadril" class="form-label">Quadril *</label>
+                                    <input type="number" step="0.1" class="form-control" id="circunferencia_quadril"
+                                           name="circunferencia_quadril" placeholder="95.0" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="circunferencia_pescoco" class="form-label">Pescoço *</label>
+                                    <input type="number" step="0.1" class="form-control" id="circunferencia_pescoco"
+                                           name="circunferencia_pescoco" placeholder="35.0" required>
+                                </div>
+                            </div>
+
+                            <!-- Observações -->
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <label for="observacoes_medidas" class="form-label">
+                                        <i class="bi bi-chat-text me-1"></i>
+                                        Observações sobre as medidas
+                                    </label>
+                                    <textarea class="form-control" id="observacoes_medidas" name="observacoes_medidas" rows="2"
+                                              placeholder="Observações ou dificuldades na coleta das medidas"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Seção de Perguntas -->
+                    <div class="card form-section mb-4" data-section="2">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-chat-quote me-2"></i>
+                                Questionário de Avaliação
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                    <!-- Pergunta 1 -->
+                    <div class="mb-4">
+                        <label for="faltou_algo" class="form-label">
+                            <i class="bi bi-question-circle me-1"></i>
+                            1) Sentiu falta de alguma coisa nesse treino que está finalizando? *
+                        </label>
+                        <textarea class="form-control" id="faltou_algo" name="faltou_algo" rows="3"
+                            placeholder="Descreva se sentiu falta de alguma coisa no treino" required></textarea>
+                    </div>
+
+                    <!-- Pergunta 2 -->
+                    <div class="mb-3">
+                        <label for="gostou_mais_menos" class="form-label">
+                            <i class="bi bi-emoji-smile me-1"></i>
+                            2) O que mais gostou e o que menos gostou no treino? *
+                        </label>
+                        <textarea class="form-control" id="gostou_mais_menos" name="gostou_mais_menos" rows="4"
+                            placeholder="Conte o que mais gostou e o que menos gostou no treino" required></textarea>
+                    </div>
+
+                    <!-- Pergunta 3 -->
+                    <div class="mb-3">
+                        <label for="meta_agua" class="form-label">
+                            <i class="bi bi-droplet me-1"></i>
+                            3) Conseguiu bater sua meta diária de água? Se não todos os dias, quais dias teve mais dificuldade em bater a meta? *
+                        </label>
+                        <textarea class="form-control" id="meta_agua" name="meta_agua" rows="3"
+                            placeholder="Conte sobre sua meta de água e os dias com mais dificuldade" required></textarea>
+                    </div>
+
+                    <!-- Pergunta 4 -->
+                    <div class="mb-3">
+                        <label for="meta_agua_melhorar" class="form-label">
+                            <i class="bi bi-cup me-1"></i>
+                            4) Se não conseguiu bater a meta de água, o que você acha que pode fazer para melhorar a ingestão de água? *
+                        </label>
+                        <textarea class="form-control" id="meta_agua_melhorar" name="meta_agua_melhorar" rows="3"
+                            placeholder="Estratégias para melhorar a ingestão de água" required></textarea>
+                    </div>
+
+                    <!-- Pergunta 5 -->
+                    <div class="mb-3">
+                        <label for="alimentacao" class="form-label">
+                            <i class="bi bi-egg-fried me-1"></i>
+                            5) Conseguiu melhorar a alimentação / manter o plano alimentar? Se não conseguiu me fala as maiores dificuldades que teve e me conta detalhadamente sobre essas dificuldades detalhadamente, preciso saber o que está atrapalhando o seu progresso. *
+                        </label>
+                        <textarea class="form-control" id="alimentacao" name="alimentacao" rows="5"
+                            placeholder="Conte detalhadamente sobre sua alimentação e as dificuldades que enfrentou" required></textarea>
+                    </div>
+
+                    <!-- Pergunta 6 -->
+                    <div class="mb-3">
+                        <label for="pedido_especial" class="form-label">
+                            <i class="bi bi-chat-square-text me-1"></i>
+                            6) Algum pedido especial para o próximo treino? *
+                        </label>
+                        <textarea class="form-control" id="pedido_especial" name="pedido_especial" rows="3"
+                            placeholder="Algum pedido especial ou foco para o próximo treino?" required></textarea>
+                    </div>
+
+                    <!-- Pergunta 7 -->
+                    <div class="mb-3">
+                        <label for="rotina_treino" class="form-label">
+                            <i class="bi bi-calendar-check me-1"></i>
+                            7) Irá manter a quantidade de dias e horários do treino? Se não, me conta como é a nova rotina. *
+                        </label>
+                        <textarea class="form-control" id="rotina_treino" name="rotina_treino" rows="3"
+                            placeholder="Conte sobre sua rotina atual de treino e se pretende manter ou mudar" required></textarea>
+                    </div>
+
+                    <!-- Pergunta 8 -->
+                    <div class="mb-4">
+                        <label for="sugestao_geral" class="form-label">
+                            <i class="bi bi-lightbulb me-1"></i>
+                            8) Sente falta em alguma coisa na consultoria no geral? Alguma sugestão ou crítica? *
+                        </label>
+                        <textarea class="form-control" id="sugestao_geral" name="sugestao_geral" rows="4"
+                            placeholder="Sugestões, críticas ou melhorias para a consultoria em geral" required></textarea>
+                    </div>
+                        </div>
+                    </div>
+
+                    <!-- Seção de Melhorias -->
+                    <div class="card form-section mb-4" data-section="3">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0">
+                                <i class="bi bi-star me-2"></i>
+                                Melhorias Percebidas
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                    <div class="mb-4">
+                        <label class="form-label">
+                            <i class="bi bi-star me-1"></i>
+                            Quais itens você sentiu mais melhora? *
+                        </label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="melhora_sono" name="melhorias" value="Melhora do Sono">
+                                    <label class="form-check-label" for="melhora_sono">
+                                        Melhora do Sono
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="diminuicao_ansiedade" name="melhorias" value="Diminuição da Ansiedade">
+                                    <label class="form-check-label" for="diminuicao_ansiedade">
+                                        Diminuição da Ansiedade
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="melhora_celulite" name="melhorias" value="Melhora da Celulite">
+                                    <label class="form-check-label" for="melhora_celulite">
+                                        Melhora da Celulite
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="melhora_disposicao" name="melhorias" value="Melhora da disposição no dia a dia">
+                                    <label class="form-check-label" for="melhora_disposicao">
+                                        Melhora da disposição no dia a dia
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="roupas_largas" name="melhorias" value="Sentindo as roupas mais largas">
+                                    <label class="form-check-label" for="roupas_largas">
+                                        Sentindo as roupas mais largas
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="melhora_pele" name="melhorias" value="Melhora na pele e cabelo">
+                                    <label class="form-check-label" for="melhora_pele">
+                                        Melhora na pele e cabelo
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="reducao_estresse" name="melhorias" value="Redução do estresse">
+                                    <label class="form-check-label" for="reducao_estresse">
+                                        Redução do estresse
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="melhora_humor" name="melhorias" value="Melhora do Humor">
+                                    <label class="form-check-label" for="melhora_humor">
+                                        Melhora do Humor
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="diminuicao_peso" name="melhorias" value="Diminuição de peso">
+                                    <label class="form-check-label" for="diminuicao_peso">
+                                        Diminuição de peso
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="melhora_intestino" name="melhorias" value="Melhora do Intestino">
+                                    <label class="form-check-label" for="melhora_intestino">
+                                        Melhora do Intestino
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Campo "Outra" -->
+                        <div class="mt-3">
+                            <label for="outros_melhorias" class="form-label">Outra:</label>
+                            <input type="text" class="form-control" id="outros_melhorias" name="outros_melhorias"
+                                   placeholder="Descreva outras melhorias que sentiu">
+                        </div>
+                    </div>
+                        </div>
+                    </div>
+
+                    <!-- Seção Final -->
+                    <div class="card form-section mb-4" data-section="4">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-check-circle me-2"></i>
+                                Confirmação e Aceite
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                    <!-- Ciência e envio de fotos -->
+                    <div class="mb-4">
+                        <div class="alert alert-light border rounded-3">
+                            <p class="mb-2">
+                                Estou ciente que não devo omitir nenhuma informação que seja necessária sobre esse mês
+                                que passou.
+                                E para que a prescrição do novo treino fique individualizada para as minhas
+                                necessidades, preciso enviar
+                                as fotos de frente, lado e costa no grupo de suporte do WhatsApp, para ser avaliado onde
+                                teve melhora
+                                e onde ainda preciso melhorar.
+                            </p>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="aceite_info" name="aceite_info"
+                                    required>
+                                <label class="form-check-label" for="aceite_info">
+                                    Aceite e assinatura da informação acima *
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Aceite -->
+                    <div class="mb-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="aceite" value="true" id="aceite"
+                                required>
+                            <label class="form-check-label" for="aceite">
+                                <strong>Declaro que todas as informações fornecidas são verdadeiras *</strong>
+                            </label>
+                        </div>
+                    </div>
+                        </div>
+                    </div>
+
+                    <!-- Botões -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        {% if is_admin %}
+                        <a href="/admin/alunos" class="btn btn-outline-secondary me-md-2">
+                            <i class="bi bi-arrow-left me-1"></i>
+                            Ver Alunos
+                        </a>
+                        {% else %}
+                        <a href="/meu-historico" class="btn btn-outline-secondary me-md-2">
+                            <i class="bi bi-arrow-left me-1"></i>
+                            Meu Histórico
+                        </a>
+                        {% endif %}
+                        <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                            <i class="bi bi-check-circle me-2"></i>
+                            Enviar Reavaliação
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Form submission with loading state
+function handleFormSubmit(event) {
+  event.preventDefault();
+
+  // Validate form
+  const form = document.getElementById('avaliacaoForm');
+  if (!form.checkValidity()) {
+    form.reportValidity();
+    return false;
+  }
+
+  // Show loading overlay
+  document.getElementById('loadingOverlay').style.display = 'flex';
+
+  // Disable submit button
+  const submitBtn = document.getElementById('submitBtn');
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Enviando...';
+
+  // Submit form after short delay for UX
+  setTimeout(() => {
+    form.submit();
+  }, 1000);
+
+  return false;
+}
+
+// Progress tracking
+function updateProgress() {
+  const sections = document.querySelectorAll('[data-section]');
+  const progressBar = document.getElementById('progressBar');
+  const sectionIndicator = document.getElementById('sectionIndicator');
+
+  let currentSection = 1;
+  const viewportHeight = window.innerHeight;
+  const scrollTop = window.scrollY;
+
+  sections.forEach((section, index) => {
+    const rect = section.getBoundingClientRect();
+    if (rect.top <= viewportHeight / 2) {
+      currentSection = index + 1;
+    }
+  });
+
+  const progress = (currentSection / sections.length) * 100;
+  progressBar.style.width = progress + '%';
+
+  // Update section indicator
+  const sectionNames = [
+    'Informações Básicas',
+    'Questionário de Avaliação',
+    'Melhorias Percebidas',
+    'Confirmação e Aceite'
+  ];
+
+  sectionIndicator.innerHTML = `
+    <i class="bi bi-info-circle me-2"></i>
+    Seção ${currentSection} de ${sections.length}: ${sectionNames[currentSection - 1] || 'Finalização'}
+  `;
+}
+
+// Form validation helpers
+function validateNumericInput(input) {
+  const value = parseFloat(input.value);
+  const fieldName = input.name;
+
+  // Basic validation based on field
+  if (fieldName === 'peso' && (value < 30 || value > 300)) {
+    input.setCustomValidity('Peso deve estar entre 30kg e 300kg');
+    return false;
+  }
+
+  if (fieldName === 'altura' && (value < 100 || value > 250)) {
+    input.setCustomValidity('Altura deve estar entre 100cm e 250cm');
+    return false;
+  }
+
+  input.setCustomValidity('');
+  return true;
+}
+
+// Auto-save functionality (localStorage)
+function autoSaveForm() {
+  const formData = new FormData(document.getElementById('avaliacaoForm'));
+  const data = {};
+
+  for (let [key, value] of formData.entries()) {
+    if (data[key]) {
+      if (Array.isArray(data[key])) {
+        data[key].push(value);
+      } else {
+        data[key] = [data[key], value];
+      }
+    } else {
+      data[key] = value;
+    }
+  }
+
+  localStorage.setItem('avaliacaoFormData', JSON.stringify(data));
+}
+
+// Load saved form data
+function loadSavedData() {
+  const saved = localStorage.getItem('avaliacaoFormData');
+  if (saved) {
+    try {
+      const data = JSON.parse(saved);
+
+      Object.keys(data).forEach(key => {
+        const element = document.querySelector(`[name="${key}"]`);
+        if (element) {
+          if (element.type === 'checkbox') {
+            element.checked = Array.isArray(data[key]) ? data[key].includes(element.value) : data[key] === element.value;
+          } else {
+            element.value = Array.isArray(data[key]) ? data[key][0] : data[key];
+          }
+        }
+      });
+    } catch (e) {
+      console.log('Erro ao carregar dados salvos:', e);
+    }
+  }
+}
+
+// Clear saved data after successful submission
+function clearSavedData() {
+  localStorage.removeItem('avaliacaoFormData');
+}
+
+// Admin student selector enhancement
+function redirectToFormulario() {
+  const select = document.getElementById('admin_aluno_select');
+  const btn = document.querySelector('[onclick="redirectToFormulario()"]');
+
+  if (btn) {
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Carregando...';
+    btn.disabled = true;
+  }
+
+  const alunoId = select.value;
+  if (alunoId) {
+    window.location.href = `/formulario?aluno_id=${alunoId}`;
+  } else {
+    window.location.href = '/formulario';
+  }
+}
+
+// Page initialization
+document.addEventListener('DOMContentLoaded', function() {
+  // Load saved form data
+  loadSavedData();
+
+  // Set up progress tracking
+  updateProgress();
+  window.addEventListener('scroll', updateProgress);
+
+  // Set up auto-save (every 30 seconds)
+  setInterval(autoSaveForm, 30000);
+
+  // Add input validation
+  document.querySelectorAll('input[type="number"]').forEach(input => {
+    input.addEventListener('blur', () => validateNumericInput(input));
+    input.addEventListener('input', () => input.setCustomValidity(''));
+  });
+
+  // Add form change listeners for auto-save
+  const form = document.getElementById('avaliacaoForm');
+  if (form) {
+    form.addEventListener('change', autoSaveForm);
+    form.addEventListener('input', debounce(autoSaveForm, 2000));
+  }
+
+  // Show save notification
+  window.addEventListener('beforeunload', function(e) {
+    autoSaveForm();
+  });
+
+  // Animate form sections on scroll
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.form-section').forEach((section, index) => {
+    section.style.opacity = '0';
+    section.style.transform = 'translateY(30px)';
+    section.style.transition = `opacity 0.6s ease ${index * 0.1}s, transform 0.6s ease ${index * 0.1}s`;
+    observer.observe(section);
+  });
+});
+
+// Utility function for debouncing
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+</script>
+{% endblock %}

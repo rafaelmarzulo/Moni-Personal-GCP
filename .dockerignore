@@ -1,0 +1,67 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env
+pip-log.txt
+pip-delete-this-directory.txt
+.tox
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.git
+.mypy_cache
+.pytest_cache
+.hypothesis
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDEs
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Local files
+*.sqlite
+*.db
+monipersonal.db
+.env.local
+.env.development
+.env.test
+
+# Documentation
+README.md
+docs/
+
+# Docker (mantém Dockerfile para referência, mas não afeta o build)
+docker-compose.yml
+compose.yml
+
+# SSL certificates
+ssl/
+*.pem
+*.key
+*.crt
+
+# Logs
+*.log
+logs/

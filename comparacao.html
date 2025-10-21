@@ -1,0 +1,514 @@
+{% extends "base.html" %}
+
+{% block title %}Comparação de Progresso - {{ nome }} - Sistema de Reavaliação Física MoniPersonal{% endblock %}
+
+{% block head_extra %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                <i class="bi bi-graph-up me-2"></i>
+                Comparação de Progresso - {{ nome }}
+            </h2>
+            <div>
+                {% if avaliacoes and avaliacoes|length > 1 %}
+                    <a href="/comparar/{{ nome }}/pdf" class="btn btn-success me-2" target="_blank">
+                        <i class="bi bi-file-earmark-pdf me-1"></i>
+                        Exportar PDF
+                    </a>
+                {% endif %}
+                {% if is_admin %}
+                    <a href="/admin/aluno/{{ nome }}" class="btn btn-outline-primary me-2">
+                        <i class="bi bi-clock-history me-1"></i>
+                        Ver Histórico
+                    </a>
+                    <a href="/admin/alunos" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>
+                        Voltar
+                    </a>
+                {% else %}
+                    <a href="/meu-historico" class="btn btn-outline-primary me-2">
+                        <i class="bi bi-clock-history me-1"></i>
+                        Ver Histórico
+                    </a>
+                    <a href="/formulario" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>
+                        Voltar
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if avaliacoes and avaliacoes|length > 1 %}
+            <!-- Resumo de Evolução -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-bar-chart me-2"></i>
+                        Resumo da Evolução
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="border rounded p-3">
+                                <h6 class="text-muted">Total de Avaliações</h6>
+                                <h3 class="text-primary">{{ avaliacoes|length }}</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border rounded p-3">
+                                <h6 class="text-muted">Primeira Avaliação</h6>
+                                <h5 class="text-success">{{ avaliacoes[0].data.strftime('%d/%m/%Y') }}</h5>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border rounded p-3">
+                                <h6 class="text-muted">Última Avaliação</h6>
+                                <h5 class="text-info">{{ avaliacoes[-1].data.strftime('%d/%m/%Y') }}</h5>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border rounded p-3">
+                                <h6 class="text-muted">Período</h6>
+                                <h5 class="text-warning">
+                                    {{ ((avaliacoes[-1].data - avaliacoes[0].data).days) }} dias
+                                </h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráficos de Evolução -->
+            <div class="row mb-4">
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-graph-up me-2"></i>
+                                Evolução do Peso
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="pesoChart" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header bg-warning text-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-rulers me-2"></i>
+                                Evolução das Medidas Principais
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="medidasChart" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráficos Individuais para Medidas Essenciais -->
+            <div class="row mb-4">
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-rulers me-2"></i>
+                                Evolução do Pescoço
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="pescocoChart" height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-rulers me-2"></i>
+                                Evolução da Cintura
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="cinturaChart" height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header bg-warning text-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-rulers me-2"></i>
+                                Evolução do Quadril
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="quadrilChart" height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comparação Detalhada -->
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="bi bi-list-check me-2"></i>
+                        Comparação Detalhada
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Peso</th>
+                                    <th>Medidas</th>
+                                    <th>Melhorias</th>
+                                    <th>Observações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for avaliacao in avaliacoes %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ avaliacao.data.strftime('%d/%m/%Y') }}</strong>
+                                        {% if loop.first %}
+                                            <span class="badge bg-success ms-1">Primeira</span>
+                                        {% elif loop.last %}
+                                            <span class="badge bg-info ms-1">Última</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ avaliacao.peso }}</td>
+                                    <td>
+                                        <small>{{ avaliacao.medidas[:50] }}{% if avaliacao.medidas|length > 50 %}...{% endif %}</small>
+                                    </td>
+                                    <td>
+                                        {% if avaliacao.melhorias_processadas %}
+                                            {% for melhoria in avaliacao.melhorias_processadas[:3] %}
+                                                <span class="badge bg-success me-1">{{ melhoria }}</span>
+                                            {% endfor %}
+                                            {% if avaliacao.melhorias_processadas|length > 3 %}
+                                                <span class="badge bg-secondary">+{{ avaliacao.melhorias_processadas|length - 3 }}</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if avaliacao.outros_melhorias %}
+                                            <small>{{ avaliacao.outros_melhorias[:40] }}{% if avaliacao.outros_melhorias|length > 40 %}...{% endif %}</small>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Análise de Melhorias -->
+            {% set all_melhorias = [] %}
+            {% for avaliacao in avaliacoes %}
+                {% if avaliacao.melhorias_processadas %}
+                    {% for melhoria in avaliacao.melhorias_processadas %}
+                        {% set _ = all_melhorias.append(melhoria) %}
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
+
+            {% if all_melhorias %}
+            <div class="card mt-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-trophy me-2"></i>
+                        Melhorias Mais Frequentes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% set melhorias_count = {} %}
+                        {% for melhoria in all_melhorias %}
+                            {% if melhoria in melhorias_count %}
+                                {% set _ = melhorias_count.update({melhoria: melhorias_count[melhoria] + 1}) %}
+                            {% else %}
+                                {% set _ = melhorias_count.update({melhoria: 1}) %}
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% for melhoria, count in melhorias_count.items() %}
+                        <div class="col-md-4 mb-2">
+                            <div class="d-flex justify-content-between align-items-center p-2 border rounded">
+                                <span>{{ melhoria }}</span>
+                                <span class="badge bg-success">{{ count }}x</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+        {% elif avaliacoes and avaliacoes|length == 1 %}
+            <div class="text-center py-5">
+                <i class="bi bi-graph-up text-muted" style="font-size: 4rem;"></i>
+                <h4 class="text-muted mt-3">Apenas uma avaliação encontrada</h4>
+                <p class="text-muted">
+                    {{ nome }} possui apenas uma avaliação. São necessárias pelo menos 2 avaliações para comparar o progresso.
+                </p>
+                <a href="/formulario" class="btn btn-primary mt-3">
+                    <i class="bi bi-plus-circle me-1"></i>
+                    Fazer Nova Avaliação
+                </a>
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-graph-up text-muted" style="font-size: 4rem;"></i>
+                <h4 class="text-muted mt-3">Nenhuma avaliação encontrada</h4>
+                <p class="text-muted">
+                    {{ nome }} ainda não possui avaliações registradas.
+                </p>
+                <a href="/formulario" class="btn btn-primary mt-3">
+                    <i class="bi bi-plus-circle me-1"></i>
+                    Fazer Primeira Avaliação
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if avaliacoes and avaliacoes|length > 1 %}
+<script>
+// Preparar dados das avaliações
+const avaliacoes = {{ avaliacoes_json | tojson | safe }};
+
+// Processar datas e dados
+const labels = avaliacoes.map(a => {
+    const date = new Date(a.data);
+    return date.toLocaleDateString('pt-BR');
+});
+
+const pesos = avaliacoes.map(a => a.peso_kg || null);
+
+// Configuração de cores consistente
+const colors = {
+    peso: '#0dcaf0',
+    cintura: '#dc3545',
+    torax: '#198754',
+    quadril: '#fd7e14',
+    bracos: '#6f42c1',
+    coxas: '#20c997',
+    panturrilhas: '#ffc107'
+};
+
+// Gráfico de Evolução do Peso
+const pesoCtx = document.getElementById('pesoChart').getContext('2d');
+new Chart(pesoCtx, {
+    type: 'line',
+    data: {
+        labels: labels,
+        datasets: [{
+            label: 'Peso (kg)',
+            data: pesos,
+            borderColor: colors.peso,
+            backgroundColor: colors.peso + '20',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: colors.peso,
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointRadius: 6
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                labels: { color: '#fff' }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: false,
+                ticks: { color: '#fff' },
+                grid: { color: '#ffffff33' }
+            },
+            x: {
+                ticks: { color: '#fff' },
+                grid: { color: '#ffffff33' }
+            }
+        }
+    }
+});
+
+// Gráfico de Medidas Principais (Cintura e Quadril)
+const medidasPrincipais = avaliacoes.map(a => ({
+    cintura: a.cintura_cm || null,
+    quadril: a.quadril_cm || null
+}));
+
+const medidasCtx = document.getElementById('medidasChart').getContext('2d');
+new Chart(medidasCtx, {
+    type: 'line',
+    data: {
+        labels: labels,
+        datasets: [
+            {
+                label: 'Cintura (cm)',
+                data: medidasPrincipais.map(m => m.cintura),
+                borderColor: colors.cintura,
+                backgroundColor: colors.cintura + '20',
+                borderWidth: 2,
+                tension: 0.4
+            },
+            {
+                label: 'Quadril (cm)',
+                data: medidasPrincipais.map(m => m.quadril),
+                borderColor: colors.quadril,
+                backgroundColor: colors.quadril + '20',
+                borderWidth: 2,
+                tension: 0.4
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                labels: { color: '#fff' }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: false,
+                ticks: { color: '#fff' },
+                grid: { color: '#ffffff33' }
+            },
+            x: {
+                ticks: { color: '#fff' },
+                grid: { color: '#ffffff33' }
+            }
+        }
+    }
+});
+
+// Gráficos Individuais para Medidas Essenciais
+const pescocos = avaliacoes.map(a => a.pescoco_cm || null);
+const cinturas = avaliacoes.map(a => a.cintura_cm || null);
+const quadris = avaliacoes.map(a => a.quadril_cm || null);
+
+// Configuração comum para gráficos individuais
+const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+        legend: {
+            labels: { color: '#fff' }
+        }
+    },
+    scales: {
+        y: {
+            beginAtZero: false,
+            ticks: { color: '#fff' },
+            grid: { color: '#ffffff33' }
+        },
+        x: {
+            ticks: { color: '#fff' },
+            grid: { color: '#ffffff33' }
+        }
+    }
+};
+
+// Gráfico do Pescoço
+const pescocoCtx = document.getElementById('pescocoChart').getContext('2d');
+new Chart(pescocoCtx, {
+    type: 'line',
+    data: {
+        labels: labels,
+        datasets: [{
+            label: 'Pescoço (cm)',
+            data: pescocos,
+            borderColor: '#198754',
+            backgroundColor: '#19875420',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: '#198754',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointRadius: 6
+        }]
+    },
+    options: chartOptions
+});
+
+// Gráfico da Cintura
+const cinturaCtx = document.getElementById('cinturaChart').getContext('2d');
+new Chart(cinturaCtx, {
+    type: 'line',
+    data: {
+        labels: labels,
+        datasets: [{
+            label: 'Cintura (cm)',
+            data: cinturas,
+            borderColor: '#dc3545',
+            backgroundColor: '#dc354520',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: '#dc3545',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointRadius: 6
+        }]
+    },
+    options: chartOptions
+});
+
+// Gráfico do Quadril
+const quadrilCtx = document.getElementById('quadrilChart').getContext('2d');
+new Chart(quadrilCtx, {
+    type: 'line',
+    data: {
+        labels: labels,
+        datasets: [{
+            label: 'Quadril (cm)',
+            data: quadris,
+            borderColor: '#fd7e14',
+            backgroundColor: '#fd7e1420',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: '#fd7e14',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointRadius: 6
+        }]
+    },
+    options: chartOptions
+});
+</script>
+{% endif %}
+{% endblock %}
+

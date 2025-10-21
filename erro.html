@@ -1,0 +1,420 @@
+{% extends "base.html" %}
+
+{% block title %}{{ titulo or "Erro" }} - {{ super() }}{% endblock %}
+
+{% block head_extra %}
+<style>
+  .error-container {
+    min-height: 60vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem 1rem;
+  }
+
+  .error-card {
+    background: rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 99, 132, 0.3);
+    border-radius: 20px;
+    max-width: 600px;
+    width: 100%;
+    padding: 3rem 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .error-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #ff6384, #ff9f40, #ffcd56);
+  }
+
+  .error-icon {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: rgba(255, 99, 132, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 2rem;
+    font-size: 3rem;
+    color: #ff6384;
+    border: 3px solid rgba(255, 99, 132, 0.3);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 99, 132, 0.4); }
+    50% { transform: scale(1.05); box-shadow: 0 0 0 20px rgba(255, 99, 132, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 99, 132, 0); }
+  }
+
+  .error-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 1rem;
+  }
+
+  .error-message {
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 2rem;
+    line-height: 1.6;
+  }
+
+  .error-details {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 2rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+    border-left: 4px solid #ff6384;
+    text-align: left;
+    word-break: break-word;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  .error-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .action-btn {
+    border-radius: 12px !important;
+    padding: 0.75rem 1.5rem !important;
+    font-weight: 600 !important;
+    transition: all 0.3s ease !important;
+    text-decoration: none !important;
+  }
+
+  .action-btn:hover {
+    transform: translateY(-2px) !important;
+  }
+
+  .reload-btn {
+    background: var(--gradient-main) !important;
+    border: none !important;
+    color: white !important;
+  }
+
+  .reload-btn:hover {
+    background: var(--gradient-gold) !important;
+    color: var(--text-dark) !important;
+  }
+
+  .home-btn {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: white !important;
+  }
+
+  .home-btn:hover {
+    background: rgba(255, 255, 255, 0.2) !important;
+    color: white !important;
+  }
+
+  .contact-btn {
+    background: transparent !important;
+    border: 1px solid #17a2b8 !important;
+    color: #17a2b8 !important;
+  }
+
+  .contact-btn:hover {
+    background: #17a2b8 !important;
+    color: white !important;
+  }
+
+  .error-code {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: rgba(255, 99, 132, 0.2);
+    color: #ff6384;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  .troubleshoot {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    text-align: left;
+  }
+
+  .troubleshoot h6 {
+    color: #ffc107;
+    margin-bottom: 1rem;
+  }
+
+  .troubleshoot ul {
+    color: rgba(255, 255, 255, 0.8);
+    padding-left: 1.5rem;
+  }
+
+  .troubleshoot li {
+    margin-bottom: 0.5rem;
+  }
+
+  @media (max-width: 768px) {
+    .error-card {
+      padding: 2rem 1rem;
+    }
+
+    .error-icon {
+      width: 80px;
+      height: 80px;
+      font-size: 2.5rem;
+    }
+
+    .error-title {
+      font-size: 1.5rem;
+    }
+
+    .error-message {
+      font-size: 1rem;
+    }
+
+    .error-actions {
+      flex-direction: column;
+      width: 100%;
+    }
+
+    .action-btn {
+      width: 100%;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="error-container">
+  <div class="error-card">
+    {% if request.url.path.startswith('/admin/') %}
+      <div class="error-code">ADMIN</div>
+    {% endif %}
+
+    <div class="error-icon">
+      <i class="bi bi-exclamation-triangle"></i>
+    </div>
+
+    <h2 class="error-title">
+      {{ titulo or "Oops! Algo deu errado" }}
+    </h2>
+
+    <p class="error-message">
+      {{ mensagem or "Ocorreu um erro inesperado. Nossa equipe foi notificada e estamos trabalhando para resolver o problema." }}
+    </p>
+
+    {% if detalhes %}
+      <div class="error-details">
+        <strong>Detalhes técnicos:</strong><br>
+        {{ detalhes }}
+      </div>
+    {% endif %}
+
+    <div class="error-actions">
+      <button onclick="reloadPage()" class="btn reload-btn action-btn">
+        <i class="bi bi-arrow-clockwise me-2"></i>
+        Tentar Novamente
+      </button>
+
+      <a href="/formulario" class="btn home-btn action-btn">
+        <i class="bi bi-house me-2"></i>
+        Página Inicial
+      </a>
+
+      <button onclick="reportError()" class="btn contact-btn action-btn">
+        <i class="bi bi-bug me-2"></i>
+        Reportar Erro
+      </button>
+    </div>
+
+    <!-- Troubleshooting Tips -->
+    <div class="troubleshoot">
+      <h6>
+        <i class="bi bi-lightbulb me-2"></i>
+        Dicas para resolver:
+      </h6>
+      <ul>
+        <li>Verifique sua conexão com a internet</li>
+        <li>Tente recarregar a página (F5 ou Ctrl+R)</li>
+        <li>Limpe o cache do navegador</li>
+        <li>Se o problema persistir, entre em contato conosco</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- Go Back Option -->
+<div class="text-center mt-4">
+  <button onclick="goBack()" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left me-2"></i>
+    Voltar à página anterior
+  </button>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Reload page function
+function reloadPage() {
+  const btn = event.target;
+  const originalContent = btn.innerHTML;
+
+  // Show loading state
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Recarregando...';
+  btn.disabled = true;
+
+  // Add slight delay for better UX
+  setTimeout(() => {
+    window.location.reload();
+  }, 500);
+}
+
+// Go back function
+function goBack() {
+  if (window.history.length > 1) {
+    window.history.back();
+  } else {
+    window.location.href = '/formulario';
+  }
+}
+
+// Report error function
+function reportError() {
+  const errorDetails = {
+    url: window.location.href,
+    userAgent: navigator.userAgent,
+    timestamp: new Date().toISOString(),
+    error: '{{ detalhes|replace("'", "\\'") if detalhes else "Erro não especificado" }}'
+  };
+
+  // Create email body
+  const emailBody = `
+Olá equipe MoniPersonal,
+
+Gostaria de reportar um erro encontrado no sistema:
+
+URL: ${errorDetails.url}
+Data/Hora: ${new Date().toLocaleString('pt-BR')}
+Navegador: ${navigator.userAgent}
+
+Detalhes do erro:
+{{ titulo or "Erro não especificado" }}
+{{ mensagem or "Mensagem não disponível" }}
+{% if detalhes %}
+Detalhes técnicos: {{ detalhes }}
+{% endif %}
+
+Por favor, investiguem este problema.
+
+Obrigado!
+`.trim();
+
+  // Try to open email client
+  const mailtoLink = `mailto:suporte@monipersonal.com.br?subject=Erro no Sistema MoniPersonal&body=${encodeURIComponent(emailBody)}`;
+
+  try {
+    window.location.href = mailtoLink;
+  } catch (error) {
+    // Fallback: copy error details to clipboard
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(emailBody).then(() => {
+        alert('Detalhes do erro copiados para a área de transferência!\n\nEnvie estas informações para: suporte@monipersonal.com.br');
+      }).catch(() => {
+        showErrorReportFallback(errorDetails);
+      });
+    } else {
+      showErrorReportFallback(errorDetails);
+    }
+  }
+}
+
+// Fallback for error reporting
+function showErrorReportFallback(errorDetails) {
+  alert(`Por favor, envie as seguintes informações para: suporte@monipersonal.com.br
+
+URL: ${errorDetails.url}
+Erro: {{ titulo or "Erro não especificado" }}
+Data: ${new Date().toLocaleString('pt-BR')}
+
+Detalhes: {{ detalhes or "Não disponível" }}`);
+}
+
+// Page initialization
+document.addEventListener('DOMContentLoaded', function() {
+  // Auto-refresh option (if appropriate)
+  const isNetworkError = '{{ detalhes }}'.includes('network') || '{{ detalhes }}'.includes('connection');
+
+  if (isNetworkError) {
+    // Try to auto-refresh after 10 seconds
+    let countdown = 10;
+    const countdownElement = document.createElement('div');
+    countdownElement.className = 'text-center mt-3 text-muted';
+    countdownElement.innerHTML = `<small>Tentativa automática em <span id="countdown">${countdown}</span> segundos...</small>`;
+
+    document.querySelector('.error-card').appendChild(countdownElement);
+
+    const countdownInterval = setInterval(() => {
+      countdown--;
+      const countdownSpan = document.getElementById('countdown');
+      if (countdownSpan) {
+        countdownSpan.textContent = countdown;
+      }
+
+      if (countdown <= 0) {
+        clearInterval(countdownInterval);
+        window.location.reload();
+      }
+    }, 1000);
+
+    // Allow user to cancel auto-refresh
+    document.addEventListener('click', () => {
+      clearInterval(countdownInterval);
+      if (countdownElement) {
+        countdownElement.remove();
+      }
+    });
+  }
+
+  // Add smooth animations
+  const errorCard = document.querySelector('.error-card');
+  errorCard.style.opacity = '0';
+  errorCard.style.transform = 'translateY(30px)';
+
+  setTimeout(() => {
+    errorCard.style.transition = 'all 0.6s ease';
+    errorCard.style.opacity = '1';
+    errorCard.style.transform = 'translateY(0)';
+  }, 100);
+});
+
+// Handle navigation with loading states
+document.querySelectorAll('a[href^="/"]').forEach(link => {
+  link.addEventListener('click', function(e) {
+    if (!this.target || this.target === '_self') {
+      const original = this.innerHTML;
+      this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Carregando...';
+      this.style.pointerEvents = 'none';
+    }
+  });
+});
+</script>
+{% endblock %}

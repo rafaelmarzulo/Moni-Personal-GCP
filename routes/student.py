@@ -1,0 +1,261 @@
+"""
+Rotas para alunos (formulário, histórico, etc.)
+"""
+from fastapi import APIRouter, Request, Form, Depends, HTTPException
+from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.templating import Jinja2Templates
+from sqlalchemy.orm import Session
+from datetime import datetime, date
+import structlog
+
+from database import get_db
+from models import Aluno, Avaliacao
+from app.middleware.auth import require_auth
+from app.services.auth_service import verify_simple_jwt
+from app.core.config import SESSION_COOKIE_NAME
+from app.utils.logging import info_log, debug_log, error_log
+from app.utils.datetime_utils import now_sao_paulo, utc_to_sao_paulo
+
+# Configurar router
+router = APIRouter(tags=["student"])
+
+# Configurar templates
+templates = Jinja2Templates(directory="templates")
+
+# Logger
+logger = structlog.get_logger()
+
+
+@router.get("/meu-historico", response_class=HTMLResponse)
+@require_auth(['aluno'])
+async def meu_historico(
+    request: Request,
+    db: Session = Depends(get_db),
+    session_data=None,
+    jwt_data=None
+):
+    """Histórico pessoal do aluno logado"""
+    try:
+        # Obter ID do aluno logado
+        aluno_id = None
+        if jwt_data:
+            aluno_id = jwt_data.get("user_id")
+        elif session_data:
+            aluno_id = session_data.get("user_id")
+
+        if not aluno_id:
+            debug_log("❌ HISTORICO: ID do aluno não encontrado")
+            return RedirectResponse(url="/login")
+
+        # Buscar aluno
+        aluno = db.query(Aluno).filter(Aluno.id == aluno_id).first()
+        if not aluno:
+            debug_log(f"❌ HISTORICO: Aluno ID {aluno_id} não encontrado")
+            return RedirectResponse(url="/login")
+
+        # Buscar avaliações do aluno
+        avaliacoes = db.query(Avaliacao).filter(
+            Avaliacao.aluno_id == aluno_id
+        ).order_by(Avaliacao.data_avaliacao.desc()).all()
+
+        # Converter timestamps para timezone local
+        for avaliacao in avaliacoes:
+            if avaliacao.data_avaliacao:
+                avaliacao.data_local = utc_to_sao_paulo(avaliacao.data_avaliacao)
+
+        info_log(f"📊 HISTORICO: {len(avaliacoes)} avaliações para {aluno.nome}")
+
+        return templates.TemplateResponse(
+            "meu_historico.html",
+            {
+                "request": request,
+                "aluno": aluno,
+                "avaliacoes": avaliacoes,
+                "total_avaliacoes": len(avaliacoes),
+                "is_admin": False
+            }
+        )
+
+    except Exception as e:
+        error_log(f"❌ HISTORICO: Erro: {str(e)}")
+        return templates.TemplateResponse(
+            "erro.html",
+            {
+                "request": request,
+                "titulo": "Erro no Histórico",
+                "mensagem": "Erro ao carregar seu histórico. Tente novamente.",
+                "detalhes": str(e)
+            }
+        )
+
+
+@router.get("/formulario", response_class=HTMLResponse)
+@require_auth(['aluno'])
+async def formulario_page(
+    request: Request,
+    session_data=None,
+    jwt_data=None
+):
+    """Página do formulário de avaliação"""
+    try:
+        # Obter dados do aluno logado
+        aluno_nome = "Aluno"
+        if jwt_data:
+            # TODO: buscar nome do aluno pelo ID
+            aluno_nome = f"Aluno ID {jwt_data.get('user_id')}"
+        elif session_data:
+            aluno_nome = f"Aluno ID {session_data.get('user_id')}"
+
+        debug_log(f"📝 FORMULARIO: Página acessada por {aluno_nome}")
+
+        return templates.TemplateResponse(
+            "formulario.html",
+            {
+                "request": request,
+                "aluno_nome": aluno_nome,
+                "data_atual": now_sao_paulo().strftime("%Y-%m-%d"),
+                "is_admin": False
+            }
+        )
+
+    except Exception as e:
+        error_log(f"❌ FORMULARIO: Erro: {str(e)}")
+        return templates.TemplateResponse(
+            "erro.html",
+            {
+                "request": request,
+                "titulo": "Erro no Formulário",
+                "mensagem": "Erro ao carregar formulário. Tente novamente.",
+                "detalhes": str(e)
+            }
+        )
+
+
+@router.post("/formulario", response_class=HTMLResponse)
+async def formulario_submit(
+    request: Request,
+    # Campos básicos obrigatórios
+    nome: str = Form(...),
+    data_nascimento: str = Form(...),
+    peso: float = Form(...),
+    altura: float = Form(...),
+
+    # Campos específicos da avaliação
+    observacoes: str = Form(""),
+
+    db: Session = Depends(get_db)
+):
+    """Processa submissão do formulário de avaliação"""
+    try:
+        debug_log(f"📝 FORMULARIO/SUBMIT: Recebendo dados de {nome}")
+
+        # Obter token de sessão
+        session_token = request.cookies.get(SESSION_COOKIE_NAME)
+        jwt_data = verify_simple_jwt(session_token) if session_token else None
+
+        if not jwt_data or jwt_data.get("user_type") != "aluno":
+            debug_log("❌ FORMULARIO/SUBMIT: Usuário não autenticado")
+            return RedirectResponse(url="/login", status_code=303)
+
+        aluno_id = jwt_data.get("user_id")
+
+        # Buscar ou criar aluno
+        aluno = db.query(Aluno).filter(Aluno.id == aluno_id).first()
+        if not aluno:
+            error_log(f"❌ FORMULARIO/SUBMIT: Aluno ID {aluno_id} não encontrado")
+            return RedirectResponse(url="/login", status_code=303)
+
+        # Criar nova avaliação
+        nova_avaliacao = Avaliacao(
+            aluno_id=aluno_id,
+            data_avaliacao=now_sao_paulo(),
+            peso=peso,
+            altura=altura,
+            observacoes=observacoes or ""
+        )
+
+        # Calcular IMC
+        if altura > 0:
+            imc = peso / ((altura / 100) ** 2)
+            nova_avaliacao.imc = round(imc, 2)
+
+        db.add(nova_avaliacao)
+        db.commit()
+        db.refresh(nova_avaliacao)
+
+        info_log(f"✅ FORMULARIO/SUBMIT: Nova avaliação criada para {aluno.nome} - IMC: {nova_avaliacao.imc}")
+
+        # Redirecionar para histórico
+        return RedirectResponse(url="/meu-historico?success=true", status_code=303)
+
+    except ValueError as e:
+        error_log(f"❌ FORMULARIO/SUBMIT: Erro de validação: {str(e)}")
+        return templates.TemplateResponse(
+            "formulario.html",
+            {
+                "request": request,
+                "error": f"Dados inválidos: {str(e)}",
+                "nome": nome,
+                "is_admin": False
+            }
+        )
+    except Exception as e:
+        error_log(f"❌ FORMULARIO/SUBMIT: Erro: {str(e)}")
+        return templates.TemplateResponse(
+            "formulario.html",
+            {
+                "request": request,
+                "error": f"Erro ao salvar avaliação: {str(e)}",
+                "nome": nome,
+                "is_admin": False
+            }
+        )
+
+
+@router.get("/perfil", response_class=HTMLResponse)
+@require_auth(['aluno'])
+async def perfil_aluno(
+    request: Request,
+    db: Session = Depends(get_db),
+    session_data=None,
+    jwt_data=None
+):
+    """Página de perfil do aluno"""
+    try:
+        # Obter ID do aluno logado
+        aluno_id = None
+        if jwt_data:
+            aluno_id = jwt_data.get("user_id")
+        elif session_data:
+            aluno_id = session_data.get("user_id")
+
+        if not aluno_id:
+            return RedirectResponse(url="/login")
+
+        # Buscar aluno
+        aluno = db.query(Aluno).filter(Aluno.id == aluno_id).first()
+        if not aluno:
+            return RedirectResponse(url="/login")
+
+        debug_log(f"👤 PERFIL: Carregando perfil de {aluno.nome}")
+
+        return templates.TemplateResponse(
+            "perfil_aluno.html",
+            {
+                "request": request,
+                "aluno": aluno,
+                "is_admin": False
+            }
+        )
+
+    except Exception as e:
+        error_log(f"❌ PERFIL: Erro: {str(e)}")
+        return templates.TemplateResponse(
+            "erro.html",
+            {
+                "request": request,
+                "titulo": "Erro no Perfil",
+                "mensagem": "Erro ao carregar perfil. Tente novamente.",
+                "detalhes": str(e)
+            }
+        )

@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}Criar Conta • MoniPersonal{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6 col-lg-5">
+    <div class="card">
+      <div class="card-header brand-gradient text-white text-center">
+        <h5 class="mb-0">
+          <i class="bi bi-person-plus-fill me-2"></i>
+          Criar Nova Conta
+        </h5>
+      </div>
+      <div class="card-body p-4">
+        {% if error %}
+        <div class="alert alert-danger">
+          <i class="bi bi-exclamation-triangle me-2"></i>
+          {{ error }}
+        </div>
+        {% endif %}
+
+        <form method="post" action="/registro">
+          <div class="mb-3">
+            <label class="form-label">
+              <i class="bi bi-person me-1"></i>
+              Nome Completo
+            </label>
+            <input type="text" name="nome" class="form-control" placeholder="Seu nome completo" required autofocus>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">
+              <i class="bi bi-envelope me-1"></i>
+              E-mail
+            </label>
+            <input type="email" name="email" class="form-control" placeholder="seu@email.com" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">
+              <i class="bi bi-telephone me-1"></i>
+              Telefone (opcional)
+            </label>
+            <input type="tel" name="telefone" class="form-control" placeholder="(11) 99999-9999">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">
+              <i class="bi bi-key me-1"></i>
+              Senha
+            </label>
+            <input type="password" name="password" class="form-control" placeholder="Mínimo 6 caracteres" required minlength="6">
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label">
+              <i class="bi bi-key-fill me-1"></i>
+              Confirmar Senha
+            </label>
+            <input type="password" name="confirm_password" class="form-control" placeholder="Digite a senha novamente" required minlength="6">
+          </div>
+
+          <div class="d-grid gap-2">
+            <button class="btn btn-success" type="submit">
+              <i class="bi bi-person-check me-2"></i>
+              Criar Conta
+            </button>
+            <a class="btn btn-outline-secondary" href="/login">
+              <i class="bi bi-arrow-left me-2"></i>
+              Já tenho conta
+            </a>
+          </div>
+        </form>
+
+        <hr class="my-4">
+
+        <div class="text-center">
+          <small class="text-muted">
+            <i class="bi bi-shield-check me-1"></i>
+            Seus dados estão seguros conosco
+          </small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card de informações -->
+    <div class="card mt-3">
+      <div class="card-body text-center">
+        <h6 class="card-title">
+          <i class="bi bi-info-circle me-2"></i>
+          Seja bem-vindo!
+        </h6>
+        <p class="card-text small text-muted">
+          Crie sua conta para acessar o formulário de reavaliação<br>
+          e acompanhar seu progresso físico.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Validação de senhas em tempo real
+document.addEventListener('DOMContentLoaded', function() {
+  const password = document.querySelector('input[name="password"]');
+  const confirmPassword = document.querySelector('input[name="confirm_password"]');
+
+  function validatePasswords() {
+    if (password.value !== confirmPassword.value) {
+      confirmPassword.setCustomValidity('Senhas não coincidem');
+    } else {
+      confirmPassword.setCustomValidity('');
+    }
+  }
+
+  password.addEventListener('input', validatePasswords);
+  confirmPassword.addEventListener('input', validatePasswords);
+});
+</script>
+{% endblock %}

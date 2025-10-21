@@ -1,0 +1,431 @@
+/* Theme.css - Tema Feminino Elegante MoniPersonal */
+
+:root {
+  /* Paleta de cores feminina */
+  --primary-dark: #1a1a1a;
+  /* Preto principal */
+  --primary-gold: #d4af37;
+  /* Dourado elegante */
+  --primary-rose: #d63384;
+  /* Rosa vibrante */
+  --primary-purple: #6f42c1;
+  /* Roxo sofisticado */
+  --accent-pink: #f8d7da;
+  /* Rosa claro */
+  --accent-purple: #e2d9f3;
+  /* Roxo claro */
+  --gradient-main: linear-gradient(135deg, var(--primary-purple), var(--primary-rose));
+  --gradient-gold: linear-gradient(135deg, var(--primary-gold), #f4e775);
+  --text-light: #ffffff;
+  --text-dark: var(--primary-dark);
+  --bg-light: #faf9f7;
+  --shadow-elegant: 0 8px 32px rgba(111, 66, 193, 0.15);
+}
+
+/* Reset e base */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: var(--bg-light);
+  color: var(--text-dark);
+  line-height: 1.6;
+  margin: 0;
+  padding: 0;
+}
+
+/* TESTE DE FUNCIONAMENTO - deve mostrar borda vermelha */
+body {
+  border: 5px solid red !important;
+}
+
+/* Header elegante */
+.theme-navbar,
+.navbar.theme-navbar,
+nav.theme-navbar {
+  background: var(--gradient-main) !important;
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1rem 0;
+}
+
+.navbar-brand {
+  color: var(--text-light) !important;
+  font-weight: 700;
+  font-size: 1.5rem;
+  text-decoration: none;
+}
+
+.navbar-brand:hover {
+  color: var(--primary-gold) !important;
+  transform: translateY(-1px);
+  transition: all 0.3s ease;
+}
+
+/* Logo redondo elegante */
+.logo-round {
+  border-radius: 50%;
+  border: 2px solid var(--primary-gold);
+  padding: 2px;
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+}
+
+/* Botões estilizados */
+.btn-primary {
+  background: var(--gradient-main) !important;
+  border: none !important;
+  border-radius: 25px !important;
+  padding: 12px 24px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: var(--shadow-elegant) !important;
+  transition: all 0.3s ease !important;
+  color: var(--text-light) !important;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 12px 40px rgba(111, 66, 193, 0.25) !important;
+  background: var(--gradient-gold) !important;
+  color: var(--text-dark) !important;
+}
+
+.btn-outline-primary {
+  border: 2px solid var(--primary-purple);
+  color: var(--primary-purple);
+  border-radius: 25px;
+  padding: 10px 20px;
+  font-weight: 600;
+  background: transparent;
+  transition: all 0.3s ease;
+}
+
+.btn-outline-primary:hover {
+  background: var(--primary-purple);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-elegant);
+}
+
+.btn-success {
+  background: var(--gradient-gold);
+  border: none;
+  border-radius: 25px;
+  color: var(--text-dark);
+  font-weight: 600;
+}
+
+.btn-outline-success {
+  border: 2px solid var(--primary-gold);
+  color: var(--primary-gold);
+  border-radius: 25px;
+}
+
+.btn-outline-success:hover {
+  background: var(--primary-gold);
+  color: var(--text-dark);
+}
+
+.btn-outline-secondary {
+  border: 2px solid #6c757d;
+  color: #6c757d;
+  border-radius: 25px;
+}
+
+.btn-outline-secondary:hover {
+  background: #6c757d;
+  color: white;
+}
+
+/* Cards elegantes */
+.card {
+  border: none;
+  border-radius: 20px;
+  box-shadow: var(--shadow-elegant);
+  overflow: hidden;
+  background: white;
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 50px rgba(111, 66, 193, 0.2);
+}
+
+.card-header {
+  background: var(--gradient-main) !important;
+  color: var(--text-light) !important;
+  border: none;
+  padding: 1.5rem;
+  font-weight: 700;
+}
+
+.brand-gradient {
+  background: var(--gradient-main) !important;
+}
+
+.bg-primary {
+  background: var(--gradient-main) !important;
+}
+
+.bg-success {
+  background: var(--gradient-gold) !important;
+  color: var(--text-dark) !important;
+}
+
+/* Badges elegantes */
+.badge {
+  border-radius: 15px;
+  padding: 6px 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
+}
+
+.badge.bg-success {
+  background: var(--gradient-gold) !important;
+  color: var(--text-dark) !important;
+}
+
+.badge.bg-primary {
+  background: var(--gradient-main) !important;
+}
+
+.badge.bg-info {
+  background: linear-gradient(135deg, #17a2b8, #20c997) !important;
+}
+
+.badge.bg-secondary {
+  background: linear-gradient(135deg, #6c757d, #adb5bd) !important;
+}
+
+/* Formulários elegantes */
+.form-control {
+  border: 2px solid #e9ecef;
+  border-radius: 15px;
+  padding: 12px 16px;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.form-control:focus {
+  border-color: var(--primary-purple);
+  box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25);
+  background: white;
+}
+
+.form-label {
+  color: var(--text-dark);
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+/* Checkboxes estilizados */
+.form-check-input:checked {
+  background-color: var(--primary-purple);
+  border-color: var(--primary-purple);
+}
+
+.form-check-input:focus {
+  box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25);
+}
+
+/* Tabelas elegantes */
+.table {
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: var(--shadow-elegant);
+}
+
+.table-dark {
+  background: var(--gradient-main) !important;
+}
+
+.table-striped>tbody>tr:nth-of-type(odd)>td {
+  background-color: rgba(248, 215, 218, 0.1);
+}
+
+/* Alertas personalizados */
+.alert {
+  border: none;
+  border-radius: 15px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.alert-success {
+  background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
+  color: var(--text-dark);
+  border-left: 4px solid var(--primary-gold);
+}
+
+.alert-danger {
+  background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+  color: var(--text-dark);
+  border-left: 4px solid var(--primary-rose);
+}
+
+.alert-light {
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  color: var(--text-dark);
+  border-left: 4px solid var(--primary-purple);
+}
+
+/* Footer elegante */
+.theme-footer {
+  background: var(--primary-dark);
+  color: var(--text-light);
+  border-top: 3px solid var(--primary-gold);
+}
+
+/* Ícones femininos */
+.bi-person-circle {
+  color: var(--primary-purple) !important;
+}
+
+.bi-heart-fill {
+  color: var(--primary-rose) !important;
+}
+
+.text-primary {
+  color: var(--primary-purple) !important;
+}
+
+.text-success {
+  color: var(--primary-gold) !important;
+}
+
+.text-info {
+  color: #17a2b8 !important;
+}
+
+.text-warning {
+  color: #ffc107 !important;
+}
+
+/* Animações suaves */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card,
+.alert,
+.btn {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+/* Estados especiais */
+.border-primary {
+  border-color: var(--primary-purple) !important;
+}
+
+.border-success {
+  border-color: var(--primary-gold) !important;
+  border-width: 3px !important;
+}
+
+/* Links elegantes */
+a {
+  color: var(--primary-purple);
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+a:hover {
+  color: var(--primary-rose);
+  text-decoration: none;
+}
+
+/* Melhorias no navbar */
+.navbar .btn {
+  margin: 0 0.25rem;
+}
+
+.btn-light-subtle {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: var(--text-light);
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+}
+
+.btn-light-subtle:hover {
+  background: rgba(255, 255, 255, 0.3);
+  color: var(--text-light);
+  transform: translateY(-1px);
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .navbar-brand {
+    font-size: 1.2rem;
+  }
+
+  .btn {
+    padding: 10px 16px;
+    font-size: 0.9rem;
+  }
+
+  .card {
+    margin-bottom: 1rem;
+  }
+
+  .card-header {
+    padding: 1rem;
+  }
+}
+
+/* Gradiente de fundo sutil */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(circle at 20% 80%, rgba(111, 66, 193, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(214, 51, 132, 0.05) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Melhorias específicas para páginas */
+.container {
+  position: relative;
+  z-index: 1;
+}
+
+/* Estilo para campos de formulário com ícones */
+.form-label i {
+  color: var(--primary-purple);
+  margin-right: 0.5rem;
+}
+
+/* Hover effects para cards de alunos */
+.card-body .btn:hover {
+  transform: translateY(-2px);
+}
+
+/* Estilo para os botões de navegação no header */
+.navbar .btn-primary {
+  background: var(--gradient-gold);
+  color: var(--text-dark);
+}
+
+.navbar .btn-primary:hover {
+  background: white;
+  color: var(--primary-purple);
+}
