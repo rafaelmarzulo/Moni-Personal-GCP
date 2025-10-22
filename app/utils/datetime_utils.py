@@ -17,6 +17,8 @@ def now_sao_paulo():
 
 def utc_to_sao_paulo(utc_dt):
     """Converte datetime UTC para São Paulo"""
+    if utc_dt is None:
+        return None
     if utc_dt.tzinfo is None:
         utc_dt = utc_dt.replace(tzinfo=ZoneInfo("UTC"))
     return utc_dt.astimezone(SAO_PAULO_TZ)

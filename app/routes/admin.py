@@ -134,6 +134,7 @@ async def admin_historico_aluno(
 @router.get("/debug-alunos")
 @require_admin()
 async def admin_debug_alunos(
+    request: Request,
     db: Session = Depends(get_db),
     session_data=None,
     jwt_data=None
@@ -174,6 +175,7 @@ async def admin_debug_alunos(
 @router.get("/stats")
 @require_admin()
 async def admin_estatisticas(
+    request: Request,
     db: Session = Depends(get_db),
     session_data=None,
     jwt_data=None

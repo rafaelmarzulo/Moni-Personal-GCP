@@ -174,10 +174,11 @@ async def formulario_submit(
         # Criar nova avaliação
         nova_avaliacao = Avaliacao(
             aluno_id=aluno_id,
+            nome=aluno.nome,  # Preencher com nome do aluno
             data=now_sao_paulo(),
-            peso=peso,
-            altura=altura,
-            observacoes=observacoes or ""
+            peso_kg=peso,
+            altura_cm=altura,
+            observacoes_medidas=observacoes or ""
         )
 
         # Calcular IMC
