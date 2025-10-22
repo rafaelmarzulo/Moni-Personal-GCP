@@ -4,7 +4,7 @@ Rotas públicas (health checks, ping, readiness, etc.)
 from fastapi import APIRouter, Request, Depends
 from sqlalchemy.orm import Session
 
-from database import get_db
+from app.core.database import get_db
 from app.core.config import APP_NAME, APP_VERSION
 from app.utils.datetime_utils import now_sao_paulo
 

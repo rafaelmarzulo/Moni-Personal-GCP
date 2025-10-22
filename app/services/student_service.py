@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime, date
 from typing import List, Optional, Dict, Any
 
-from models import Aluno, Avaliacao
+from app.models import Aluno, Avaliacao
 from app.utils.logging import info_log, debug_log, error_log
 from app.utils.datetime_utils import now_sao_paulo, utc_to_sao_paulo
 

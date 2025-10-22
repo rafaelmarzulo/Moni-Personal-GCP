@@ -7,8 +7,8 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 import structlog
 
-from database import get_db
-from models import Aluno, Usuario
+from app.core.database import get_db
+from app.models import Aluno, Usuario
 from app.services.auth_service import (
     verify_password, create_simple_jwt, verify_simple_jwt,
     ADMIN_PASSWORD_HASH, hash_password, create_session_token,
