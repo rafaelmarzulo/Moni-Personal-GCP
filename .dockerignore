@@ -1,28 +1,67 @@
-# Git
-.git
-.gitignore
+# ====================================
+# Docker Ignore - Otimizado para GCP
+# ====================================
 
-# Python
-__pycache__
-*.pyc
-*.pyo
-*.pyd
+# Git
+.git/
+.gitignore
+.gitattributes
+.github/
+
+# Python cache e builds
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
 .Python
-env
-pip-log.txt
-pip-delete-this-directory.txt
-.tox
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+virtualenv/
+
+# Testing
+.pytest_cache/
+.mypy_cache/
+.hypothesis/
+.tox/
+.nox/
 .coverage
 .coverage.*
-.cache
-nosetests.xml
 coverage.xml
+htmlcov/
 *.cover
-*.log
-.git
-.mypy_cache
-.pytest_cache
-.hypothesis
+nosetests.xml
+tests/
+test_*.py
+*_test.py
+
+# IDEs e Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
 
 # OS
 .DS_Store
@@ -33,35 +72,79 @@ coverage.xml
 ehthumbs.db
 Thumbs.db
 
-# IDEs
-.vscode
-.idea
-*.swp
-*.swo
-*~
-
-# Local files
+# Local databases
 *.sqlite
+*.sqlite3
 *.db
 monipersonal.db
-.env.local
-.env.development
-.env.test
+
+# Environment files (CRÍTICO!)
+.env
+.env.*
+!.env.example
+*.env
+secrets/
+credentials/
 
 # Documentation
 README.md
 docs/
+LICENSE
+*.md
+!README.md
 
-# Docker (mantém Dockerfile para referência, mas não afeta o build)
+# Docker files (não precisa na imagem)
 docker-compose.yml
 compose.yml
+Dockerfile.dev
+.dockerignore
 
-# SSL certificates
+# GCP files
+app.yaml
+.gcloudignore
+
+# Infrastructure as Code
+infrastructure/
+terraform/
+*.tf
+*.tfstate
+*.tfvars
+
+# Scripts
+scripts/
+*.sh
+Makefile
+
+# SSL/TLS
 ssl/
 *.pem
 *.key
 *.crt
+*.cert
 
 # Logs
 *.log
 logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Node (se houver)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Backups
+*.bak
+*.backup
+*.old
+
+# Temporary
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Alembic local (migrations rodadas no deploy)
+alembic.ini.local
+alembic/versions/*.pyc

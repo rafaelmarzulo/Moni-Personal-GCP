@@ -1,17 +1,50 @@
+# ====================================
+# Requirements para Google Cloud Platform
+# Moni-Personal GCP Edition
+# ====================================
+
+# Framework Web
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
+gunicorn==21.2.0
+
+# Database
 sqlalchemy==2.0.23
 psycopg2-binary==2.9.9
-python-multipart==0.0.6
-python-dotenv==1.0.0
-jinja2==3.1.2
-aiofiles==23.2.1
-email-validator==2.1.0
+alembic==1.12.1
+
+# Autenticação e Segurança
 passlib[bcrypt]==1.7.4
 python-jose[cryptography]==3.3.0
-alembic==1.12.1
+python-multipart==0.0.6
+email-validator==2.1.0
+
+# Templates e Assets
+jinja2==3.1.2
+aiofiles==23.2.1
+python-dotenv==1.0.0
+
+# Geração de Relatórios
 weasyprint==62.1
 reportlab==4.2.0
+
+# Logging e Monitoramento
 structlog==23.2.0
 slowapi==0.1.9
+
+# Google Cloud Platform SDK
+google-cloud-logging==3.8.0
+google-cloud-secret-manager==2.16.4
+google-cloud-storage==2.14.0
+
+# Observabilidade e APM (opcional)
+opentelemetry-api==1.21.0
+opentelemetry-sdk==1.21.0
+opentelemetry-instrumentation-fastapi==0.42b0
+opentelemetry-exporter-gcp-trace==1.6.0
+
+# Timezone Support
 backports.zoneinfo==0.2.1; python_version<"3.9"
+
+# HTTP Client para health checks
+httpx==0.25.2

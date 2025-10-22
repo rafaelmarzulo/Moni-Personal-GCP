@@ -1,174 +1,207 @@
-# 🏋️ MoniPersonal - Google Cloud Platform Deployment
+# 🏋️ Moni Personal - Google Cloud Platform Edition
 
 [![GCP](https://img.shields.io/badge/GCP-4285F4?logo=google-cloud&logoColor=white)](https://cloud.google.com)
-[![Kubernetes](https://img.shields.io/badge/Kubernetes-326CE5?logo=kubernetes&logoColor=white)](https://kubernetes.io)
-[![Terraform](https://img.shields.io/badge/Terraform-7B42BC?logo=terraform&logoColor=white)](https://terraform.io)
+[![Cloud Run](https://img.shields.io/badge/Cloud_Run-4285F4?logo=google-cloud&logoColor=white)](https://cloud.google.com/run)
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-336791?logo=postgresql&logoColor=white)](https://postgresql.org)
+[![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python&logoColor=white)](https://python.org)
 
-> **Enterprise-grade fitness tracking application running on Google Kubernetes Engine (GKE)**
+> **Sistema de Gestão de Reavaliações Físicas rodando em Google Cloud Platform**
 
-Sistema web para personal trainers acompanharem o progresso de seus alunos através de reavaliações físicas periódicas, com infraestrutura **Cloud Native** completa no Google Cloud Platform.
-
----
-
-## 🎯 **Sobre Este Projeto**
-
-Este repositório demonstra a **migração** de uma aplicação tradicional Docker Compose para uma arquitetura **Cloud Native** moderna rodando em **Google Kubernetes Engine (GKE)**, utilizando:
-
-- ✅ **Infrastructure as Code** com Terraform modular
-- ✅ **Container Orchestration** com Kubernetes
-- ✅ **CI/CD** completo com GitHub Actions
-- ✅ **Security-first** design (Workload Identity, Secret Manager)
-- ✅ **Auto-scaling** e High Availability
-- ✅ **Observability** com Cloud Monitoring
-
-**🎓 Projeto ideal para:** Portfólio DevOps/SRE, aprendizado prático de GCP/Kubernetes/Terraform, demonstração em entrevistas técnicas.
+Aplicação web moderna para personal trainers gerenciarem avaliações físicas de alunos, com deploy otimizado para Google Cloud Platform usando Cloud Run, Cloud SQL e Secret Manager.
 
 ---
 
-## ✨ **Funcionalidades da Aplicação**
+## 🎯 Sobre Este Projeto
 
-- 📝 **Formulário de Reavaliação**: Coleta completa de dados do aluno
-- 📊 **Histórico do Aluno**: Visualização de todas as reavaliações
-- 📈 **Comparação de Progresso**: Evolução entre avaliações
-- 🖨️ **Relatórios**: Geração de relatórios profissionais
-- 👥 **Gestão de Alunos**: Administração completa
+Sistema completo de gestão de reavaliações físicas com foco em:
+
+- ✅ **Cloud Native**: Otimizado para Google Cloud Platform
+- ✅ **Serverless**: Deploy em Cloud Run com auto-scaling
+- ✅ **Segurança**: Secrets gerenciados, HTTPS forçado, autenticação robusta
+- ✅ **Performance**: Cache estratégico, conexão pooling, otimizações
+- ✅ **Observabilidade**: Logging estruturado, monitoramento integrado
+- ✅ **DevOps**: Scripts de deploy automatizado, rollback fácil
+
+**🎓 Ideal para:** Portfólio Cloud/Backend, demonstração de boas práticas, casos de uso real.
 
 ---
 
-## 🚀 **Quick Start**
+## ✨ Funcionalidades
 
-### **Opção 1: Deploy no GCP (Recomendado para Showcase)**
+### Para Personal Trainers
+- 📝 **Reavaliações Completas**: Formulário com peso, medidas, dobras cutâneas
+- 📊 **Histórico Detalhado**: Visualize a evolução de cada aluno
+- 📈 **Comparação Visual**: Gráficos de progresso entre avaliações
+- 🖨️ **Relatórios PDF**: Geração automática de relatórios profissionais
+- 👥 **Gestão de Alunos**: Cadastro e organização de clientes
+
+### Técnicas
+- 🔐 **Autenticação Segura**: Sistema de login com sessões seguras
+- 📱 **Responsivo**: Interface adaptável para mobile/tablet/desktop
+- ⚡ **Performance**: Otimizado para carregamento rápido
+- 🌐 **PWA Ready**: Pode ser instalado como app
+
+---
+
+## 🚀 Quick Start
+
+### Opção 1: Deploy no Cloud Run (Recomendado)
+
+**Mais rápido, mais barato, serverless!**
 
 ```bash
-# 1. Clone o repositório
+# 1. Clone e entre no diretório
 git clone https://github.com/seu-usuario/Moni-Personal-GCP.git
 cd Moni-Personal-GCP
 
-# 2. Setup automatizado do GCP
-cd infrastructure/scripts
-./setup-gcp.sh
+# 2. Configure o projeto GCP
+gcloud config set project SEU_PROJECT_ID
 
-# 3. Deploy da infraestrutura (15-20 min)
-cd ../terraform/environments/dev
-terraform init
-terraform apply
+# 3. Configure secrets e Cloud SQL
+./scripts/gcp/setup-secrets.sh
+./scripts/gcp/setup-cloudsql.sh
 
-# 4. Deploy da aplicação (< 5 min)
-# Seguir instruções em DEPLOYMENT-GCP.md
+# 4. Deploy automatizado
+./scripts/gcp/deploy-cloud-run.sh
 ```
 
-**📖 Documentação completa:** [DEPLOYMENT-GCP.md](DEPLOYMENT-GCP.md)
+**Pronto! 🎉** Sua aplicação estará rodando em Cloud Run.
 
----
+### Opção 2: Deploy no App Engine
 
-### **Opção 2: Teste Local (Docker Compose)**
+**Para aplicações com tráfego mais constante:**
 
 ```bash
-# Quick start local
-cp .env.example .env
-docker-compose up -d
-
-# Acesse: http://localhost
+# 1. Configure variáveis no app.yaml
+# 2. Deploy direto
+gcloud app deploy app.yaml
 ```
+
+### Opção 3: Desenvolvimento Local
+
+```bash
+# 1. Criar ambiente virtual
+python3 -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# 2. Instalar dependências
+pip install -r requirements.txt
+
+# 3. Configurar variáveis
+cp .env.example .env
+# Edite .env com suas configurações
+
+# 4. Rodar aplicação
+uvicorn main:app --reload --port 8080
+```
+
+Acesse: http://localhost:8080
+
+**📖 Guias de Deploy:**
+- [DEPLOY-GUIDE.md](DEPLOY-GUIDE.md) - Guia rápido e prático
+- [DEPLOYMENT-GCP.md](DEPLOYMENT-GCP.md) - Documentação completa (GKE/Terraform)
 
 ---
 
-## 📁 **Estrutura do Projeto**
+## 📁 Estrutura do Projeto
 
 ```
 Moni-Personal-GCP/
-├── 📱 app/                       # Application code
-│   ├── core/                     # Core configurations
-│   ├── middleware/               # Auth, rate limiting
-│   ├── routes/                   # API routes
-│   ├── services/                 # Business logic
-│   └── utils/                    # Utilities
+├── 📱 app/                       # Código modular da aplicação
+│   ├── core/                     # Configurações centrais
+│   ├── middleware/               # Autenticação, rate limiting
+│   ├── routes/                   # Rotas da API
+│   ├── services/                 # Lógica de negócio
+│   └── utils/                    # Utilitários e helpers
 │
-├── 🎨 templates/                 # HTML templates
-├── 🖼️ static/                    # CSS, JS, images
+├── 🎨 templates/                 # Templates HTML (Jinja2)
+│   ├── index.html                # Landing page
+│   ├── login.html                # Página de login
+│   ├── reavaliacao.html          # Formulário de avaliação
+│   ├── historico.html            # Histórico do aluno
+│   └── ...                       # Outras páginas
 │
-├── 🐳 Docker & Compose
-│   ├── Dockerfile                # Container image
-│   ├── compose.yml               # Local development
-│   └── nginx.conf                # Nginx configuration
+├── 🖼️ static/                    # Assets estáticos
+│   ├── css/                      # Estilos customizados
+│   ├── img/                      # Imagens e ícones
+│   └── favicon.png               # Favicon
 │
-├── 🏗️ infrastructure/            # GCP Infrastructure
-│   ├── terraform/                # Infrastructure as Code
-│   │   ├── modules/
-│   │   │   ├── vpc-networking/   # VPC + Firewall + NAT
-│   │   │   ├── gke-cluster/      # GKE cluster setup
-│   │   │   └── cloud-sql/        # PostgreSQL database
-│   │   └── environments/
-│   │       ├── dev/              # Development environment
-│   │       ├── staging/          # Staging environment
-│   │       └── prod/             # Production environment
-│   │
-│   ├── kubernetes/               # Kubernetes manifests
-│   │   ├── base/                 # Base resources
-│   │   │   ├── deployment.yaml
-│   │   │   ├── service.yaml
-│   │   │   ├── ingress.yaml
-│   │   │   ├── hpa.yaml          # Auto-scaling
-│   │   │   └── ...
-│   │   └── overlays/             # Environment-specific
-│   │       ├── dev/
-│   │       ├── staging/
-│   │       └── prod/
-│   │
-│   ├── scripts/
-│   │   └── setup-gcp.sh          # Automated GCP setup
-│   │
-│   └── README.md                 # Infrastructure docs
+├── 🗄️ Banco de Dados
+│   ├── database.py               # Configuração do SQLAlchemy
+│   ├── models.py                 # Modelos ORM
+│   └── alembic/                  # Migrations de banco
 │
-├── 🔄 .github/
-│   └── workflows/                # CI/CD Pipelines
-│       ├── terraform-ci.yml      # Terraform validation
-│       ├── docker-build.yml      # Build & push images
-│       └── deploy-gke.yml        # Deploy to GKE
+├── 🐳 Docker & GCP
+│   ├── Dockerfile                # Otimizado para Cloud Run
+│   ├── .dockerignore             # Arquivos ignorados no build
+│   ├── app.yaml                  # Configuração App Engine
+│   └── .gcloudignore             # Arquivos ignorados no deploy
 │
-├── 📚 Documentation
-│   ├── README.md                 # Este arquivo
-│   ├── DEPLOYMENT-GCP.md         # Guia completo de deploy
-│   ├── SHOWCASE-GUIDE.md         # Guia para apresentações
-│   ├── QUICK-REFERENCE.md        # Comandos rápidos
-│   └── PROJETO-CRIADO.md         # Resumo do projeto
+├── 🔧 Scripts de Automação
+│   └── scripts/gcp/              # Scripts para GCP
+│       ├── deploy-cloud-run.sh   # Deploy automatizado
+│       ├── setup-secrets.sh      # Configurar Secret Manager
+│       ├── setup-cloudsql.sh     # Criar Cloud SQL instance
+│       └── rollback.sh           # Rollback de versão
 │
-└── 🔧 Configuration
-    ├── .env.example              # Environment variables template
-    ├── .gitignore                # Git ignore rules
-    ├── requirements.txt          # Python dependencies
-    └── Makefile                  # Development commands
+├── 📋 Configurações
+│   ├── main.py                   # Aplicação FastAPI principal
+│   ├── config.py                 # Configurações da app
+│   ├── requirements.txt          # Dependências Python (GCP)
+│   ├── .env.example              # Template de variáveis
+│   └── compose.yml               # Docker Compose (dev local)
+│
+└── 📖 Documentação
+    ├── README.md                 # Este arquivo
+    ├── DEPLOY-GUIDE.md           # Guia rápido de deploy
+    └── DEPLOYMENT-GCP.md         # Documentação completa (GKE)
 ```
 
 ---
 
-## 🛠️ **Stack Técnico**
+## 🛠️ Stack Técnico
 
-### **Application Layer**
-- **Backend**: Python 3.11 + FastAPI
-- **Database**: PostgreSQL 15
-- **Frontend**: HTML5 + Bootstrap 5 + Jinja2
-- **Auth**: JWT + Session-based
+### Backend
+- **Framework**: FastAPI 0.104+ (Python 3.11)
+- **ORM**: SQLAlchemy 2.0 com suporte async
+- **Autenticação**: Passlib + python-jose (JWT)
+- **Templates**: Jinja2
+- **Server**: Uvicorn + Gunicorn
 
-### **Infrastructure Layer (GCP)**
-| Component | Technology |
-|-----------|-----------|
-| **Cloud Provider** | Google Cloud Platform (GCP) |
-| **Orchestration** | Google Kubernetes Engine (GKE 1.28+) |
-| **IaC** | Terraform 1.6+ |
-| **Package Management** | Kustomize |
-| **Database** | Cloud SQL PostgreSQL 15 |
-| **Secrets** | Secret Manager |
-| **Networking** | VPC + Cloud NAT + Load Balancer |
-| **CI/CD** | GitHub Actions |
-| **Monitoring** | Cloud Monitoring + Cloud Logging |
-| **Security** | Workload Identity, Binary Authorization |
+### Frontend
+- **UI Framework**: Bootstrap 5
+- **Templates**: Jinja2 (server-side rendering)
+- **Icons**: Font Awesome
+- **Charts**: Chart.js (para gráficos de progresso)
+
+### Database
+- **Cloud SQL PostgreSQL 15** (produção)
+- **SQLAlchemy ORM** com connection pooling
+- **Alembic** para migrations
+
+### GCP Services
+| Serviço | Uso | Custo Estimado |
+|---------|-----|----------------|
+| **Cloud Run** | Hospedagem serverless | ~$10-15/mês |
+| **Cloud SQL** | Database PostgreSQL | ~$15-25/mês |
+| **Secret Manager** | Gerenciamento de secrets | ~$1/mês |
+| **Cloud Logging** | Logs centralizados | Free tier |
+| **Cloud Monitoring** | Métricas e alertas | Free tier |
+| **Cloud Build** | CI/CD pipelines | Free tier |
+
+**Custo total estimado: ~$25-40/mês** (tráfego médio)
+
+### DevOps
+- **Container**: Docker multi-stage builds
+- **Deploy**: Cloud Run (serverless)
+- **Secrets**: Google Secret Manager
+- **Logging**: Cloud Logging (estruturado)
+- **Monitoring**: Cloud Monitoring + OpenTelemetry
 
 ---
 
-## 🏗️ **Arquitetura GCP**
+## 🏗️ Arquitetura Cloud Run
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -176,131 +209,225 @@ Moni-Personal-GCP/
 ├─────────────────────────────────────────────────────────────┤
 │                                                              │
 │  ┌──────────────────────────────────────────────────────┐  │
-│  │         GKE Cluster (Auto-scaling)                    │  │
-│  │                                                        │  │
-│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐           │  │
-│  │  │ FastAPI  │  │ FastAPI  │  │ FastAPI  │  (2-10)   │  │
-│  │  │  Pod 1   │  │  Pod 2   │  │  Pod N   │           │  │
-│  │  └────┬─────┘  └────┬─────┘  └────┬─────┘           │  │
-│  │       └─────────────┴──────────────┘                 │  │
-│  │                     │                                 │  │
-│  │            ┌────────▼────────┐                       │  │
-│  │            │ Nginx Ingress   │                       │  │
-│  │            └────────┬────────┘                       │  │
-│  └─────────────────────┼─────────────────────────────── ┘  │
-│                         │                                   │
-│  ┌──────────────────────▼──────────────────────────────┐  │
-│  │      Cloud Load Balancer + Cloud Armor              │  │
-│  └─────────────────────────────────────────────────────┘  │
+│  │              Internet / CDN                           │  │
+│  └────────────────────────┬─────────────────────────────┘  │
+│                            │ HTTPS                           │
+│  ┌─────────────────────────▼──────────────────────────────┐ │
+│  │         Cloud Run Service                              │ │
+│  │  (Auto-scale: 0-10 instances)                          │ │
+│  │                                                         │ │
+│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐            │ │
+│  │  │ FastAPI  │  │ FastAPI  │  │ FastAPI  │            │ │
+│  │  │ Container│  │ Container│  │ Container│            │ │
+│  │  │  512Mi   │  │  512Mi   │  │  512Mi   │            │ │
+│  │  └────┬─────┘  └────┬─────┘  └────┬─────┘            │ │
+│  └───────┼─────────────┼─────────────┼──────────────────┘ │
+│          │             │             │                      │
+│          └─────────────┴─────────────┘                      │
+│                        │                                     │
+│  ┌─────────────────────▼──────────────────────────────────┐ │
+│  │         Cloud SQL PostgreSQL                           │ │
+│  │  (Private IP + Unix Socket Connection)                 │ │
+│  │  - Auto backups (03:00 daily)                          │ │
+│  │  - Point-in-time recovery                              │ │
+│  │  - Connection pooling (max 10)                         │ │
+│  └────────────────────────────────────────────────────────┘ │
 │                                                              │
-│  ┌─────────────────────────────────────────────────────┐  │
-│  │  Cloud SQL PostgreSQL (Private IP + Auto Backups)   │  │
-│  └─────────────────────────────────────────────────────┘  │
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │         Secret Manager                                  │ │
+│  │  - DATABASE_URL                                         │ │
+│  │  - SECRET_KEY                                           │ │
+│  │  - JWT_SECRET_KEY                                       │ │
+│  └────────────────────────────────────────────────────────┘ │
 │                                                              │
-│  ┌─────────────────────────────────────────────────────┐  │
-│  │  Secret Manager (Credentials & Secrets)             │  │
-│  └─────────────────────────────────────────────────────┘  │
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │         Observability                                   │ │
+│  │  - Cloud Logging (structured logs)                     │ │
+│  │  - Cloud Monitoring (metrics + dashboards)             │ │
+│  │  - Error Reporting (alerts)                            │ │
+│  └────────────────────────────────────────────────────────┘ │
 │                                                              │
-└─────────────────────────────────────────────────────────────┘
+└──────────────────────────────────────────────────────────────┘
 ```
 
-**Key Features:**
-- ✅ Private GKE nodes (no public IPs)
-- ✅ Auto-scaling (2-10 pods based on CPU/Memory)
-- ✅ High Availability (multi-zone deployment)
-- ✅ Automated backups (Cloud SQL)
-- ✅ SSL/TLS termination (Ingress)
-- ✅ DDoS protection (Cloud Armor)
+**Principais Recursos:**
+- ✅ **Serverless**: Scale to zero quando não está em uso
+- ✅ **Auto-scaling**: 0-10 instâncias baseado em tráfego
+- ✅ **HTTPS Automático**: Certificado SSL gerenciado pelo GCP
+- ✅ **Private Connection**: Cloud SQL via Unix Socket
+- ✅ **Secrets Management**: Integração com Secret Manager
+- ✅ **Observability**: Logs e métricas nativos do GCP
 
 ---
 
-## 📊 **Métricas & Resultados**
+## 💻 Comandos Úteis
 
-### **Infrastructure**
-- 📝 **Terraform Code**: 1,461 linhas
-- 🧩 **Modules**: 3 módulos reutilizáveis
-- ☸️ **K8s Resources**: 8 manifests
-- 🔄 **CI/CD Pipelines**: 3 workflows automatizados
-- ☁️ **GCP Resources**: ~25 recursos provisionados
+### Desenvolvimento Local
+```bash
+# Criar ambiente virtual
+python3 -m venv venv
+source venv/bin/activate
 
-### **Performance**
-- ⚡ **Deploy Time**: < 5 minutos (aplicação)
-- 🏗️ **Infrastructure Setup**: 15-20 minutos (primeira vez)
-- 📈 **Auto-scaling**: 2-10 pods (baseado em load)
-- ⏱️ **Uptime**: 99.9% (com multi-replica deployment)
+# Instalar dependências
+pip install -r requirements.txt
 
-### **Cost Optimization**
-- 💰 **Dev Environment**: ~$40-50/mês
-- 🎁 **GCP Free Tier**: $300 créditos para novos usuários
-- 📉 **Savings**: 70% vs VMs tradicionais (preemptible nodes)
+# Rodar aplicação
+uvicorn main:app --reload --port 8080
+
+# Testes (quando implementados)
+pytest
+
+# Formatar código
+black .
+isort .
+```
+
+### GCP - Cloud Run
+```bash
+# Deploy
+./scripts/gcp/deploy-cloud-run.sh
+
+# Ver logs em tempo real
+gcloud run services logs tail moni-personal --region=southamerica-east1
+
+# Rollback para versão anterior
+./scripts/gcp/rollback.sh
+
+# Abrir no browser
+gcloud run services browse moni-personal --region=southamerica-east1
+
+# Listar revisões
+gcloud run revisions list --service=moni-personal --region=southamerica-east1
+```
+
+### GCP - Cloud SQL
+```bash
+# Conectar ao banco via proxy
+cloud_sql_proxy -instances=PROJECT:REGION:INSTANCE=tcp:5432
+
+# Rodar migrations
+alembic upgrade head
+
+# Criar nova migration
+alembic revision --autogenerate -m "descrição"
+
+# Backup manual
+gcloud sql backups create --instance=INSTANCE_NAME
+```
+
+### Docker Local
+```bash
+# Build da imagem
+docker build -t moni-personal-gcp .
+
+# Rodar container
+docker run -p 8080:8080 \
+  -e PORT=8080 \
+  -e DATABASE_URL="sua-url" \
+  moni-personal-gcp
+
+# Verificar logs
+docker logs -f CONTAINER_ID
+```
 
 ---
 
-## 🔒 **Segurança**
+## 🔒 Segurança
 
-### **Implementado**
-- ✅ **Private GKE Nodes** - Sem IPs públicos em workers
-- ✅ **Workload Identity** - Autenticação segura entre GKE e GCP
-- ✅ **Secret Manager** - Credenciais criptografadas
-- ✅ **Network Policies** - Micro-segmentação no cluster
-- ✅ **Binary Authorization** - Verificação de imagens
-- ✅ **Shielded Nodes** - Secure boot e integrity monitoring
-- ✅ **RBAC** - Role-based access control
-- ✅ **Security Scanning** - tfsec, Checkov, Trivy
+### Implementado
+- ✅ **HTTPS Forçado**: Todas conexões via SSL/TLS
+- ✅ **Secret Manager**: Credenciais nunca em código
+- ✅ **Non-root Container**: Usuário não-privilegiado
+- ✅ **Rate Limiting**: Proteção contra abuso
+- ✅ **Session Security**: Cookies httponly + secure + samesite
+- ✅ **SQL Injection Protection**: Prepared statements via ORM
+- ✅ **Password Hashing**: Bcrypt para senhas
+- ✅ **CORS Policy**: Configuração restritiva
 
-### **Continuous Security**
-- ✅ Vulnerability scanning em toda build
-- ✅ Terraform security validation em PRs
-- ✅ Non-root containers
-- ✅ Read-only root filesystem
-- ✅ Security contexts configurados
-
----
-
-## 📚 **Documentação**
-
-| Documento | Descrição | Público |
-|-----------|-----------|---------|
-| **[README.md](README.md)** | Overview do projeto (você está aqui) | Todos |
-| **[DEPLOYMENT-GCP.md](DEPLOYMENT-GCP.md)** | Guia completo de deployment no GCP | DevOps/Desenvolvedores |
-| **[SHOWCASE-GUIDE.md](SHOWCASE-GUIDE.md)** | Guia para apresentações e demos | Candidatos/Apresentadores |
-| **[QUICK-REFERENCE.md](QUICK-REFERENCE.md)** | Comandos rápidos e troubleshooting | DevOps/SRE |
-| **[PROJETO-CRIADO.md](PROJETO-CRIADO.md)** | Resumo executivo do projeto | Gestores/Stakeholders |
-| **[infrastructure/README.md](infrastructure/README.md)** | Documentação técnica da infraestrutura | Engenheiros de Infraestrutura |
+### Boas Práticas
+- 🔐 Secrets gerenciados via Secret Manager
+- 🛡️ Validação de entrada com Pydantic
+- 📝 Logging estruturado (não loga dados sensíveis)
+- 🔄 Rotação de secrets recomendada a cada 90 dias
+- 📊 Auditoria de acessos via Cloud Logging
 
 ---
 
-## 🎓 **Use Cases**
+## 📊 Performance & Otimizações
 
-### **Para Estudantes/Profissionais**
-- ⭐ **Portfolio showcase** para vagas DevOps/SRE/Platform Engineer
-- 📖 **Aprendizado prático** de GCP, Kubernetes e Terraform
-- 🎯 **Demonstração** em entrevistas técnicas
-- 🔧 **Template** para outros projetos cloud-native
+### Database
+- Connection pooling (10 conexões max)
+- Pool recycle a cada 1 hora
+- Índices otimizados nas queries principais
+- Timezone-aware timestamps (America/Sao_Paulo)
 
-### **Para Personal Trainers**
-- 💼 Gestão profissional de clientes
-- 📊 Acompanhamento de evolução
-- 🖨️ Relatórios para apresentação
-- 📱 Interface web responsiva
+### Application
+- Lazy loading de módulos pesados
+- Cache de templates Jinja2
+- Compressão de responses
+- Health checks otimizados
+
+### Cloud Run
+- Startup time < 2 segundos
+- Request timeout: 300 segundos
+- Memory: 512Mi (otimizado)
+- CPU: 1 vCPU (auto-scaling)
 
 ---
 
-## 🚀 **Roadmap**
+## 🎓 Para Estudantes e Portfólio
 
-### **Curto Prazo (1-2 semanas)**
-- [ ] Helm Chart implementation
-- [ ] Cert-manager para SSL automático
-- [ ] Custom Grafana dashboards
+Este projeto demonstra:
 
-### **Médio Prazo (1 mês)**
-- [ ] ArgoCD para GitOps
-- [ ] Multi-environment (staging + prod)
-- [ ] Disaster recovery testing
+### Backend Skills
+- ✅ Python moderno (3.11+, type hints)
+- ✅ FastAPI (async, dependency injection)
+- ✅ SQLAlchemy 2.0 (ORM moderno)
+- ✅ Autenticação e autorização
+- ✅ Estrutura modular e escalável
 
-### **Longo Prazo (2-3 meses)**
-- [ ] Service Mesh (Istio)
-- [ ] Multi-region deployment
+### Cloud & DevOps
+- ✅ Google Cloud Platform (Cloud Run, Cloud SQL)
+- ✅ Containerização (Docker multi-stage)
+- ✅ Infrastructure as Code (configurável)
+- ✅ Secrets management
+- ✅ Monitoring e logging
+
+### Boas Práticas
+- ✅ Código limpo e documentado
+- ✅ Separação de responsabilidades
+- ✅ Segurança by design
+- ✅ Observabilidade
+- ✅ Scripts de automação
+
+---
+
+## 📚 Documentação
+
+| Documento | Descrição |
+|-----------|-----------|
+| **[README.md](README.md)** | Você está aqui! |
+| **[DEPLOY-GUIDE.md](DEPLOY-GUIDE.md)** | Guia rápido e prático de deploy |
+| **[DEPLOYMENT-GCP.md](DEPLOYMENT-GCP.md)** | Documentação completa (GKE/Terraform) |
+| **.env.example** | Template de variáveis de ambiente |
+
+---
+
+## 🤝 Contribuindo
+
+Contribuições são bem-vindas! Para mudanças grandes:
+
+1. Fork o projeto
+2. Crie uma branch (`git checkout -b feature/AmazingFeature`)
+3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. Push para a branch (`git push origin feature/AmazingFeature`)
+5. Abra um Pull Request
+
+---
+
+## 📝 License
+
+Este projeto é open source para fins educacionais e de portfólio.
 - [ ] FinOps dashboard
 - [ ] Mobile app integration
 
