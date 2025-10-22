@@ -38,12 +38,12 @@ class StudentService:
         try:
             avaliacoes = db.query(Avaliacao).filter(
                 Avaliacao.aluno_id == student_id
-            ).order_by(Avaliacao.data_avaliacao.desc()).all()
+            ).order_by(Avaliacao.data.desc()).all()
 
             # Converter timestamps para timezone local
             for avaliacao in avaliacoes:
-                if avaliacao.data_avaliacao:
-                    avaliacao.data_local = utc_to_sao_paulo(avaliacao.data_avaliacao)
+                if avaliacao.data:
+                    avaliacao.data_local = utc_to_sao_paulo(avaliacao.data)
 
             debug_log(f"📊 StudentService: {len(avaliacoes)} avaliações encontradas para aluno {student_id}")
             return avaliacoes
@@ -76,7 +76,7 @@ class StudentService:
             # Criar nova avaliação
             nova_avaliacao = Avaliacao(
                 aluno_id=student_id,
-                data_avaliacao=now_sao_paulo(),
+                data=now_sao_paulo(),
                 peso=peso,
                 altura=altura,
                 observacoes=observacoes or ""
@@ -203,7 +203,7 @@ class AdminService:
             from datetime import timedelta
             data_limite = now_sao_paulo() - timedelta(days=30)
             avaliacoes_recentes = db.query(Avaliacao).filter(
-                Avaliacao.data_avaliacao >= data_limite
+                Avaliacao.data >= data_limite
             ).count()
 
             # IMC médio do sistema

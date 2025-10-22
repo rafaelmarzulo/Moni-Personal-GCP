@@ -104,12 +104,12 @@ async def admin_historico_aluno(
         # Buscar avaliações do aluno
         avaliacoes = db.query(Avaliacao).filter(
             Avaliacao.aluno_id == aluno.id
-        ).order_by(Avaliacao.data_avaliacao.desc()).all()
+        ).order_by(Avaliacao.data.desc()).all()
 
         # Converter timestamps para timezone local
         for avaliacao in avaliacoes:
-            if avaliacao.data_avaliacao:
-                avaliacao.data_local = utc_to_sao_paulo(avaliacao.data_avaliacao)
+            if avaliacao.data:
+                avaliacao.data_local = utc_to_sao_paulo(avaliacao.data)
 
         info_log(f"📊 ADMIN/ALUNO: {len(avaliacoes)} avaliações encontradas para {aluno.nome}")
 
@@ -191,7 +191,7 @@ async def admin_estatisticas(
         avaliacoes_recentes = db.query(
             func.count(Avaliacao.id)
         ).filter(
-            Avaliacao.data_avaliacao >= func.now() - func.interval('6 months')
+            Avaliacao.data >= func.now() - func.interval('6 months')
         ).scalar()
 
         stats = {

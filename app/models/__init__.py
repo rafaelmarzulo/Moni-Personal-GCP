@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, ForeignKey, Float
 from sqlalchemy.orm import relationship
-from database import Base
+from app.core.database import Base
 from datetime import datetime
 try:
     from zoneinfo import ZoneInfo  # Python 3.9+
@@ -18,18 +18,17 @@ class Avaliacao(Base):
     __tablename__ = "avaliacoes"
 
     id = Column(Integer, primary_key=True, index=True)
-    aluno_id = Column(Integer, ForeignKey("alunos.id"), nullable=True)  # Nullable para compatibilidade com dados existentes
-    nome = Column(String(100), nullable=False, index=True)  # Manter por compatibilidade
+    aluno_id = Column(Integer, ForeignKey("alunos.id"), nullable=True)
+    nome = Column(String(100), nullable=True)
 
-    # Campos antigos (manter compatibilidade)
-    peso = Column(String(20), nullable=True)  # Manter para compatibilidade
-    medidas = Column(Text, nullable=True)     # Manter para compatibilidade
+    # Campos antigos (compatibilidade)
+    peso = Column(String(20), nullable=True)
+    medidas = Column(Text, nullable=True)
 
     # Novos campos específicos para medidas corporais
-    # Dados básicos
-    peso_kg = Column(Float, nullable=True)           # Peso em kg
-    altura_cm = Column(Float, nullable=True)         # Altura em cm
-    percentual_gordura = Column(Float, nullable=True) # % de gordura corporal
+    peso_kg = Column(Float, nullable=True)
+    altura_cm = Column(Float, nullable=True)
+    percentual_gordura = Column(Float, nullable=True)
 
     # Circunferências em cm
     circunferencia_pescoco = Column(Float, nullable=True)
@@ -46,7 +45,7 @@ class Avaliacao(Base):
     circunferencia_panturrilha_direita = Column(Float, nullable=True)
     circunferencia_panturrilha_esquerda = Column(Float, nullable=True)
 
-    # Dobras cutâneas em mm (para avaliações mais avançadas)
+    # Dobras cutâneas em mm
     dobra_bicipital = Column(Float, nullable=True)
     dobra_tricipital = Column(Float, nullable=True)
     dobra_subescapular = Column(Float, nullable=True)
@@ -54,19 +53,19 @@ class Avaliacao(Base):
     dobra_abdominal = Column(Float, nullable=True)
     dobra_coxa = Column(Float, nullable=True)
 
-    # Outros dados úteis
-    imc = Column(Float, nullable=True)              # Índice de Massa Corporal (calculado)
-    observacoes_medidas = Column(Text, nullable=True) # Observações sobre as medidas
-    faltou_algo = Column(Text, nullable=False)
-    gostou_mais_menos = Column(Text, nullable=False)
-    meta_agua = Column(Text, nullable=False)
+    # Outros dados
+    imc = Column(Float, nullable=True)
+    observacoes_medidas = Column(Text, nullable=True)
+    faltou_algo = Column(Text, nullable=True)
+    gostou_mais_menos = Column(Text, nullable=True)
+    meta_agua = Column(Text, nullable=True)
     meta_agua_melhorar = Column(Text, nullable=True)
-    alimentacao = Column(Text, nullable=False)
-    melhorias = Column(Text)  # Lista de melhorias separadas por vírgula
-    outros_melhorias = Column(Text)
-    pedido_especial = Column(Text, nullable=False)
+    alimentacao = Column(Text, nullable=True)
+    melhorias = Column(Text, nullable=True)
+    outros_melhorias = Column(Text, nullable=True)
+    pedido_especial = Column(Text, nullable=True)
     rotina_treino = Column(Text, nullable=True)
-    sugestao_geral = Column(Text, nullable=False)
+    sugestao_geral = Column(Text, nullable=True)
     data = Column(DateTime, default=now_sao_paulo, nullable=False)
     created_at = Column(DateTime, default=now_sao_paulo, nullable=False)
 

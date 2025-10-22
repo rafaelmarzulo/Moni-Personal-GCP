@@ -56,12 +56,12 @@ async def meu_historico(
         # Buscar avaliações do aluno
         avaliacoes = db.query(Avaliacao).filter(
             Avaliacao.aluno_id == aluno_id
-        ).order_by(Avaliacao.data_avaliacao.desc()).all()
+        ).order_by(Avaliacao.data.desc()).all()
 
         # Converter timestamps para timezone local
         for avaliacao in avaliacoes:
-            if avaliacao.data_avaliacao:
-                avaliacao.data_local = utc_to_sao_paulo(avaliacao.data_avaliacao)
+            if avaliacao.data:
+                avaliacao.data_local = utc_to_sao_paulo(avaliacao.data)
 
         info_log(f"📊 HISTORICO: {len(avaliacoes)} avaliações para {aluno.nome}")
 
@@ -93,26 +93,36 @@ async def meu_historico(
 @require_auth(['aluno'])
 async def formulario_page(
     request: Request,
+    db: Session = Depends(get_db),
     session_data=None,
     jwt_data=None
 ):
     """Página do formulário de avaliação"""
     try:
-        # Obter dados do aluno logado
-        aluno_nome = "Aluno"
+        # Obter ID do aluno logado
+        aluno_id = None
         if jwt_data:
-            # TODO: buscar nome do aluno pelo ID
-            aluno_nome = f"Aluno ID {jwt_data.get('user_id')}"
+            aluno_id = jwt_data.get("user_id")
         elif session_data:
-            aluno_nome = f"Aluno ID {session_data.get('user_id')}"
+            aluno_id = session_data.get("user_id")
 
-        debug_log(f"📝 FORMULARIO: Página acessada por {aluno_nome}")
+        if not aluno_id:
+            return RedirectResponse(url="/login")
+
+        # Buscar dados completos do aluno
+        aluno = db.query(Aluno).filter(Aluno.id == aluno_id).first()
+        if not aluno:
+            return RedirectResponse(url="/login")
+
+        debug_log(f"📝 FORMULARIO: Página acessada por {aluno.nome}")
 
         return templates.TemplateResponse(
             "formulario.html",
             {
                 "request": request,
-                "aluno_nome": aluno_nome,
+                "aluno": aluno,
+                "aluno_nome": aluno.nome,
+                "aluno_email": aluno.email,
                 "data_atual": now_sao_paulo().strftime("%Y-%m-%d"),
                 "is_admin": False
             }
@@ -134,20 +144,16 @@ async def formulario_page(
 @router.post("/formulario", response_class=HTMLResponse)
 async def formulario_submit(
     request: Request,
-    # Campos básicos obrigatórios
-    nome: str = Form(...),
-    data_nascimento: str = Form(...),
+    # Campos da avaliação física
     peso: float = Form(...),
     altura: float = Form(...),
-
-    # Campos específicos da avaliação
     observacoes: str = Form(""),
 
     db: Session = Depends(get_db)
 ):
     """Processa submissão do formulário de avaliação"""
     try:
-        debug_log(f"📝 FORMULARIO/SUBMIT: Recebendo dados de {nome}")
+        debug_log(f"📝 FORMULARIO/SUBMIT: Recebendo dados - peso: {peso}kg, altura: {altura}cm")
 
         # Obter token de sessão
         session_token = request.cookies.get(SESSION_COOKIE_NAME)
@@ -168,7 +174,7 @@ async def formulario_submit(
         # Criar nova avaliação
         nova_avaliacao = Avaliacao(
             aluno_id=aluno_id,
-            data_avaliacao=now_sao_paulo(),
+            data=now_sao_paulo(),
             peso=peso,
             altura=altura,
             observacoes=observacoes or ""
@@ -195,7 +201,6 @@ async def formulario_submit(
             {
                 "request": request,
                 "error": f"Dados inválidos: {str(e)}",
-                "nome": nome,
                 "is_admin": False
             }
         )
@@ -206,7 +211,6 @@ async def formulario_submit(
             {
                 "request": request,
                 "error": f"Erro ao salvar avaliação: {str(e)}",
-                "nome": nome,
                 "is_admin": False
             }
         )

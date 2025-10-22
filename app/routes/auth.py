@@ -68,20 +68,40 @@ async def login_submit(
                 ip=client_ip,
                 user_agent=request.headers.get("user-agent", "unknown"))
 
-    # Verificar se é admin
-    if email == "admin@monipersonal.com" and verify_password(password, ADMIN_PASSWORD_HASH):
-        logger.info("admin_login_success", email=email, ip=client_ip)
+    # Verificar se é admin usando tabela usuarios
+    try:
+        # Debug: verificar se consegue contar usuários
+        total_usuarios = db.query(Usuario).count()
+        logger.info("database_check", total_usuarios=total_usuarios, ip=client_ip)
 
-        # Criar token JWT
-        token = create_simple_jwt("admin", 0)
+        # Debug: buscar por email específico
+        usuario_por_email = db.query(Usuario).filter(Usuario.email == email).first()
+        logger.info("email_check", email=email, usuario_email_found=bool(usuario_por_email), ip=client_ip)
 
-        response = RedirectResponse(url="/admin/dashboard", status_code=303)
-        response.set_cookie(
-            key=SESSION_COOKIE_NAME,
-            value=token,
-            **SECURE_COOKIE_CONFIG
-        )
-        return response
+        # Consulta original
+        usuario = db.query(Usuario).filter(Usuario.email == email, Usuario.ativo == True, Usuario.tipo == "admin").first()
+        logger.info("admin_check", email=email, usuario_found=bool(usuario), ip=client_ip)
+    except Exception as e:
+        logger.error("database_error", error=str(e), ip=client_ip)
+        usuario = None
+
+    if usuario:
+        password_match = verify_password(password, usuario.senha_hash)
+        logger.info("password_check", email=email, password_match=password_match, password_length=len(password), hash_length=len(usuario.senha_hash), ip=client_ip)
+
+        if password_match:
+            logger.info("admin_login_success", email=email, ip=client_ip)
+
+            # Criar token JWT
+            token = create_simple_jwt("admin", usuario.id)
+
+            response = RedirectResponse(url="/admin/dashboard", status_code=303)
+            response.set_cookie(
+                key=SESSION_COOKIE_NAME,
+                value=token,
+                **SECURE_COOKIE_CONFIG
+            )
+            return response
 
     # Verificar login de aluno
     if user_type == "aluno":
@@ -166,7 +186,7 @@ async def registro_submit(
     password: str = Form(...),
     confirm_password: str = Form(...),
     telefone: str = Form(...),
-    data_nascimento: str = Form(...),
+    data_nascimento: str = Form(None),
     db: Session = Depends(get_db)
 ):
     """Processa registro de novos alunos"""

@@ -38,9 +38,6 @@ COPY app/ ./app/
 COPY templates/ ./templates/
 COPY static/ ./static/
 COPY main.py .
-COPY database.py .
-COPY models.py .
-COPY config.py .
 
 # Criar usuário não-root para segurança
 RUN useradd --create-home --shell /bin/bash --uid 1000 appuser \

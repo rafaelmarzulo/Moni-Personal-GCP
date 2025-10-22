@@ -27,20 +27,33 @@ def require_auth(user_types: list = None):
     def decorator(func):
         @wraps(func)
         async def wrapper(*args, **kwargs):
-            # Encontrar o objeto Request nos argumentos
+            # Encontrar o objeto Request nos argumentos e kwargs
             request = None
             session_token = None
 
+            # Primeiro buscar nos args
             for arg in args:
                 if isinstance(arg, Request):
                     request = arg
                     break
 
+            # Se não encontrou, buscar nos kwargs
             if not request:
-                # Tentar encontrar nos kwargs
                 request = kwargs.get('request')
 
+            # Se ainda não encontrou, buscar por nome de parâmetro comum
             if not request:
+                for key, value in kwargs.items():
+                    if isinstance(value, Request):
+                        request = value
+                        break
+
+            # Como último recurso, verificar se o primeiro argumento tem cookies (pode ser Request)
+            if not request and args and hasattr(args[0], 'cookies'):
+                request = args[0]
+
+            if not request:
+                debug_log(f"❌ REQUIRE_AUTH: Request não encontrado - args: {len(args)}, kwargs: {list(kwargs.keys())}")
                 raise HTTPException(status_code=500, detail="Request object not found")
 
             # Obter token de sessão do cookie ou parâmetro

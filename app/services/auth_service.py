@@ -18,17 +18,23 @@ ADMIN_PASSWORD_HASH = "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721
 
 
 def hash_password(password: str) -> str:
-    """Hash de senha usando bcrypt"""
-    return pwd_context.hash(password)
+    """Hash de senha usando SHA256 (temporário até resolver bcrypt)"""
+    # Usar SHA256 devido a problemas de compatibilidade com bcrypt
+    return hashlib.sha256(password.encode()).hexdigest()
 
 
 def verify_password(password: str, hashed: str) -> bool:
-    """Verifica senha contra hash bcrypt"""
+    """Verifica senha contra hash"""
+    # Verificar SHA256 primeiro (usado para novos usuarios)
+    sha256_hash = hashlib.sha256(password.encode()).hexdigest()
+    if sha256_hash == hashed:
+        return True
+
+    # Fallback para bcrypt (se funcionar)
     try:
         return pwd_context.verify(password, hashed)
     except:
-        # Fallback para compatibilidade com senhas SHA256 existentes
-        return hashlib.sha256(password.encode()).hexdigest() == hashed
+        return False
 
 
 def hash_password_legacy(password: str) -> str:
