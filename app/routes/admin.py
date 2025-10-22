@@ -25,18 +25,48 @@ logger = structlog.get_logger()
 
 
 @router.get("/dashboard", response_class=HTMLResponse)
-async def admin_dashboard(request: Request):
+@require_admin()
+async def admin_dashboard(
+    request: Request,
+    db: Session = Depends(get_db),
+    session_data=None,
+    jwt_data=None
+):
     """Dashboard administrativo principal"""
-    debug_log("🎯 ADMIN/DASHBOARD: Rota acessada")
+    try:
+        debug_log("🎯 ADMIN/DASHBOARD: Rota acessada com sucesso")
 
-    return templates.TemplateResponse(
-        "admin_dashboard.html",
-        {
-            "request": request,
-            "title": "Dashboard Administrativo",
-            "message": "🚧 Dashboard em desenvolvimento - Fase 2 da modularização"
-        }
-    )
+        # Carregar estatísticas básicas para exibição imediata
+        total_alunos = db.query(Aluno).count()
+        total_avaliacoes = db.query(Avaliacao).count()
+        alunos_ativos = db.query(Aluno).filter(Aluno.ativo == True).count()
+
+        # Avaliações recentes (últimos 30 dias)
+        from datetime import timedelta
+        data_limite = now_sao_paulo() - timedelta(days=30)
+        avaliacoes_recentes = db.query(Avaliacao).filter(
+            Avaliacao.data >= data_limite
+        ).count()
+
+        info_log(f"📊 ADMIN/DASHBOARD: Estatísticas carregadas - {total_alunos} alunos, {total_avaliacoes} avaliações")
+
+        return templates.TemplateResponse(
+            "admin_dashboard.html",
+            {
+                "request": request,
+                "title": "Dashboard Administrativo",
+                "message": "Sistema MoniPersonal operacional",
+                "total_alunos": total_alunos,
+                "total_avaliacoes": total_avaliacoes,
+                "alunos_ativos": alunos_ativos,
+                "avaliacoes_recentes": avaliacoes_recentes,
+                "is_admin": True
+            }
+        )
+
+    except Exception as e:
+        error_log(f"❌ ADMIN/DASHBOARD: Erro ao carregar dashboard: {str(e)}")
+        raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
 @router.get("/alunos", response_class=HTMLResponse)
@@ -213,31 +243,93 @@ async def admin_estatisticas(
     session_data=None,
     jwt_data=None
 ):
-    """Estatísticas gerais do sistema"""
+    """Estatísticas detalhadas do sistema"""
     try:
-        debug_log("📊 ADMIN/STATS: Calculando estatísticas")
+        debug_log("📊 ADMIN/STATS: Calculando estatísticas detalhadas")
 
         # Estatísticas básicas
         total_alunos = db.query(Aluno).count()
         total_avaliacoes = db.query(Avaliacao).count()
         alunos_ativos = db.query(Aluno).filter(Aluno.ativo == True).count()
 
-        # Avaliações por mês (últimos 6 meses)
-        avaliacoes_recentes = db.query(
-            func.count(Avaliacao.id)
-        ).filter(
-            Avaliacao.data >= func.now() - func.interval('6 months')
-        ).scalar()
+        # Avaliações recentes (últimos 30 dias)
+        from datetime import timedelta
+        data_limite_30d = now_sao_paulo() - timedelta(days=30)
+        avaliacoes_recentes = db.query(Avaliacao).filter(
+            Avaliacao.data >= data_limite_30d
+        ).count()
+
+        # Avaliações desta semana
+        data_limite_7d = now_sao_paulo() - timedelta(days=7)
+        avaliacoes_semana = db.query(Avaliacao).filter(
+            Avaliacao.data >= data_limite_7d
+        ).count()
+
+        # Avaliações de hoje
+        data_hoje = now_sao_paulo().replace(hour=0, minute=0, second=0, microsecond=0)
+        avaliacoes_hoje = db.query(Avaliacao).filter(
+            Avaliacao.data >= data_hoje
+        ).count()
+
+        # Estatísticas de IMC
+        avaliacoes_com_imc = db.query(Avaliacao).filter(
+            Avaliacao.imc.isnot(None)
+        ).all()
+
+        imc_stats = {
+            "normal": 0,
+            "sobrepeso": 0,
+            "obesidade": 0,
+            "baixo_peso": 0
+        }
+
+        for avaliacao in avaliacoes_com_imc:
+            imc = avaliacao.imc
+            if imc < 18.5:
+                imc_stats["baixo_peso"] += 1
+            elif imc < 25:
+                imc_stats["normal"] += 1
+            elif imc < 30:
+                imc_stats["sobrepeso"] += 1
+            else:
+                imc_stats["obesidade"] += 1
+
+        # Média de avaliações por aluno
+        media_avaliacoes = total_avaliacoes / total_alunos if total_alunos > 0 else 0
+
+        # Alunos com progresso (mais de 1 avaliação)
+        alunos_com_progresso = db.query(Aluno.id).join(Avaliacao).group_by(Aluno.id).having(
+            func.count(Avaliacao.id) > 1
+        ).count()
+
+        # Top 5 alunos mais ativos (por número de avaliações)
+        top_alunos = db.query(
+            Aluno.nome,
+            func.count(Avaliacao.id).label('total_avaliacoes')
+        ).join(Avaliacao).group_by(Aluno.id, Aluno.nome).order_by(
+            func.count(Avaliacao.id).desc()
+        ).limit(5).all()
 
         stats = {
             "total_alunos": total_alunos,
             "alunos_ativos": alunos_ativos,
             "total_avaliacoes": total_avaliacoes,
             "avaliacoes_recentes": avaliacoes_recentes,
+            "avaliacoes_semana": avaliacoes_semana,
+            "avaliacoes_hoje": avaliacoes_hoje,
+            "media_avaliacoes": round(media_avaliacoes, 1),
+            "alunos_com_progresso": alunos_com_progresso,
+            "imc_stats": imc_stats,
+            "top_alunos": [
+                {"nome": nome, "avaliacoes": total}
+                for nome, total in top_alunos
+            ],
+            "percentual_ativos": round((alunos_ativos / total_alunos * 100) if total_alunos > 0 else 0, 1),
+            "percentual_com_progresso": round((alunos_com_progresso / total_alunos * 100) if total_alunos > 0 else 0, 1),
             "timestamp": now_sao_paulo().isoformat()
         }
 
-        info_log(f"📊 ADMIN/STATS: Estatísticas calculadas - {total_alunos} alunos, {total_avaliacoes} avaliações")
+        info_log(f"📊 ADMIN/STATS: Estatísticas detalhadas calculadas - {total_alunos} alunos, {total_avaliacoes} avaliações, {avaliacoes_recentes} recentes")
 
         return stats
 
