@@ -8,8 +8,8 @@ from sqlalchemy.orm import Session
 from datetime import datetime, date
 import structlog
 
-from database import get_db
-from models import Aluno, Avaliacao
+from app.core.database import get_db
+from app.models import Aluno, Avaliacao
 from app.middleware.auth import require_auth
 from app.services.auth_service import verify_simple_jwt
 from app.core.config import SESSION_COOKIE_NAME
