@@ -1,0 +1,200 @@
+{% extends "admin_layout.html" %}
+{% block title %}Nova Avaliação • MoniPersonal{% endblock %}
+{% block page_title %}Nova Avaliação{% endblock %}
+{% block page_subtitle %}Registrar nova avaliação física para qualquer aluno{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-8">
+    <div class="card admin-card">
+      <div class="card-header brand-gradient text-white">
+        <h5 class="mb-0">
+          <i class="bi bi-plus-circle me-2"></i>
+          Registrar Nova Avaliação
+        </h5>
+      </div>
+      <div class="card-body">
+        <form method="POST" action="/admin/nova-avaliacao">
+          <div class="row g-3">
+            <!-- Seleção do Aluno -->
+            <div class="col-12">
+              <label for="aluno_id" class="form-label">
+                <i class="bi bi-person me-1"></i>
+                Selecionar Aluno
+              </label>
+              <select class="form-select" id="aluno_id" name="aluno_id" required>
+                <option value="">Escolha um aluno...</option>
+                {% for aluno in alunos %}
+                  <option value="{{ aluno.id }}">{{ aluno.nome }} ({{ aluno.email }})</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- Dados Físicos -->
+            <div class="col-md-6">
+              <label for="peso" class="form-label">
+                <i class="bi bi-speedometer2 me-1"></i>
+                Peso (kg)
+              </label>
+              <input
+                type="number"
+                step="0.1"
+                min="30"
+                max="300"
+                class="form-control"
+                id="peso"
+                name="peso"
+                placeholder="Ex: 70.5"
+                required
+              >
+            </div>
+
+            <div class="col-md-6">
+              <label for="altura" class="form-label">
+                <i class="bi bi-arrows-vertical me-1"></i>
+                Altura (cm)
+              </label>
+              <input
+                type="number"
+                step="0.1"
+                min="140"
+                max="220"
+                class="form-control"
+                id="altura"
+                name="altura"
+                placeholder="Ex: 175"
+                required
+              >
+            </div>
+
+            <!-- Observações -->
+            <div class="col-12">
+              <label for="observacoes" class="form-label">
+                <i class="bi bi-chat-text me-1"></i>
+                Observações (opcional)
+              </label>
+              <textarea
+                class="form-control"
+                id="observacoes"
+                name="observacoes"
+                rows="3"
+                placeholder="Observações sobre a avaliação, objetivos, etc..."
+              ></textarea>
+            </div>
+
+            <!-- IMC Preview -->
+            <div class="col-12">
+              <div class="alert alert-info" id="imcPreview" style="display: none;">
+                <i class="bi bi-calculator me-2"></i>
+                <strong>IMC Calculado:</strong> <span id="imcValue">--</span>
+                <span class="ms-2" id="imcCategory">--</span>
+              </div>
+            </div>
+
+            <!-- Data (readonly) -->
+            <div class="col-md-6">
+              <label for="data" class="form-label">
+                <i class="bi bi-calendar me-1"></i>
+                Data da Avaliação
+              </label>
+              <input
+                type="text"
+                class="form-control"
+                value="{{ data_atual }}"
+                readonly
+              >
+            </div>
+
+            <!-- Botões -->
+            <div class="col-12 mt-4">
+              <div class="d-flex gap-3">
+                <button type="submit" class="btn btn-success">
+                  <i class="bi bi-check-circle me-2"></i>
+                  Registrar Avaliação
+                </button>
+                <a href="/admin/avaliacoes" class="btn btn-outline-secondary">
+                  <i class="bi bi-arrow-left me-2"></i>
+                  Voltar para Avaliações
+                </a>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Cálculo automático do IMC
+function calcularIMC() {
+  const peso = parseFloat(document.getElementById('peso').value);
+  const altura = parseFloat(document.getElementById('altura').value);
+
+  if (peso && altura && altura > 0) {
+    const imc = peso / ((altura / 100) ** 2);
+    const imcFormatado = imc.toFixed(1);
+
+    let categoria = '';
+    let classe = '';
+
+    if (imc < 18.5) {
+      categoria = 'Baixo peso';
+      classe = 'text-info';
+    } else if (imc < 25) {
+      categoria = 'Normal';
+      classe = 'text-success';
+    } else if (imc < 30) {
+      categoria = 'Sobrepeso';
+      classe = 'text-warning';
+    } else {
+      categoria = 'Obesidade';
+      classe = 'text-danger';
+    }
+
+    document.getElementById('imcValue').textContent = imcFormatado;
+    document.getElementById('imcCategory').textContent = `(${categoria})`;
+    document.getElementById('imcCategory').className = `ms-2 ${classe} fw-bold`;
+    document.getElementById('imcPreview').style.display = 'block';
+  } else {
+    document.getElementById('imcPreview').style.display = 'none';
+  }
+}
+
+// Event listeners
+document.getElementById('peso').addEventListener('input', calcularIMC);
+document.getElementById('altura').addEventListener('input', calcularIMC);
+
+// Validação do formulário
+document.querySelector('form').addEventListener('submit', function(e) {
+  const aluno = document.getElementById('aluno_id').value;
+  const peso = document.getElementById('peso').value;
+  const altura = document.getElementById('altura').value;
+
+  if (!aluno) {
+    e.preventDefault();
+    alert('Por favor, selecione um aluno.');
+    return;
+  }
+
+  if (!peso || !altura) {
+    e.preventDefault();
+    alert('Por favor, preencha peso e altura.');
+    return;
+  }
+
+  // Mostrar loading
+  const btn = document.querySelector('button[type="submit"]');
+  const originalText = btn.innerHTML;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Registrando...';
+  btn.disabled = true;
+});
+
+// Auto-focus no primeiro campo
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('aluno_id').focus();
+});
+</script>
+{% endblock %}

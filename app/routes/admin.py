@@ -336,3 +336,270 @@ async def admin_estatisticas(
     except Exception as e:
         error_log(f"❌ ADMIN/STATS: Erro: {str(e)}")
         return {"error": f"Erro ao calcular estatísticas: {str(e)}"}
+
+
+@router.get("/reset-passwords", response_class=HTMLResponse)
+@require_admin()
+async def admin_reset_passwords(
+    request: Request,
+    db: Session = Depends(get_db),
+    session_data=None,
+    jwt_data=None
+):
+    """Página para reset de senhas de alunos"""
+    try:
+        debug_log("🔑 ADMIN/RESET-PASSWORDS: Rota acessada")
+
+        # Buscar todos os alunos para seleção
+        alunos = db.query(Aluno).filter(Aluno.ativo == True).order_by(Aluno.nome).all()
+
+        info_log(f"🔑 ADMIN/RESET-PASSWORDS: {len(alunos)} alunos ativos encontrados")
+
+        return templates.TemplateResponse(
+            "admin_reset_passwords.html",
+            {
+                "request": request,
+                "alunos": alunos,
+                "is_admin": True
+            }
+        )
+
+    except Exception as e:
+        error_log(f"❌ ADMIN/RESET-PASSWORDS: Erro: {str(e)}")
+        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+
+
+@router.post("/reset-senha/{aluno_id}")
+@require_admin()
+async def admin_reset_senha_aluno(
+    request: Request,
+    aluno_id: int,
+    nova_senha: str = Form(...),
+    db: Session = Depends(get_db),
+    session_data=None,
+    jwt_data=None
+):
+    """Resetar senha de um aluno específico"""
+    try:
+        debug_log(f"🔑 ADMIN/RESET-SENHA: Resetando senha do aluno {aluno_id}")
+
+        # Buscar aluno
+        aluno = db.query(Aluno).filter(Aluno.id == aluno_id).first()
+        if not aluno:
+            return {"error": "Aluno não encontrado"}
+
+        # Hash da nova senha
+        from passlib.context import CryptContext
+        pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+        senha_hash = pwd_context.hash(nova_senha)
+
+        # Atualizar senha
+        aluno.senha_hash = senha_hash
+        db.commit()
+
+        info_log(f"✅ ADMIN/RESET-SENHA: Senha resetada para {aluno.nome}")
+
+        return {"success": f"Senha resetada com sucesso para {aluno.nome}"}
+
+    except Exception as e:
+        error_log(f"❌ ADMIN/RESET-SENHA: Erro: {str(e)}")
+        return {"error": f"Erro ao resetar senha: {str(e)}"}
+
+
+@router.get("/avaliacoes", response_class=HTMLResponse)
+@require_admin()
+async def admin_todas_avaliacoes(
+    request: Request,
+    db: Session = Depends(get_db),
+    session_data=None,
+    jwt_data=None
+):
+    """Página com todas as avaliações do sistema"""
+    try:
+        debug_log("📊 ADMIN/AVALIACOES: Rota acessada")
+
+        # Buscar todas as avaliações com dados do aluno
+        avaliacoes = db.query(Avaliacao).join(Aluno).order_by(
+            Avaliacao.data.desc()
+        ).all()
+
+        # Converter timestamps para timezone local
+        for avaliacao in avaliacoes:
+            if avaliacao.data:
+                avaliacao.data_local = utc_to_sao_paulo(avaliacao.data)
+
+        info_log(f"📊 ADMIN/AVALIACOES: {len(avaliacoes)} avaliações encontradas")
+
+        return templates.TemplateResponse(
+            "admin_avaliacoes.html",
+            {
+                "request": request,
+                "avaliacoes": avaliacoes,
+                "total_avaliacoes": len(avaliacoes),
+                "is_admin": True
+            }
+        )
+
+    except Exception as e:
+        error_log(f"❌ ADMIN/AVALIACOES: Erro: {str(e)}")
+        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+
+
+@router.get("/relatorios", response_class=HTMLResponse)
+@require_admin()
+async def admin_relatorios(
+    request: Request,
+    db: Session = Depends(get_db),
+    session_data=None,
+    jwt_data=None
+):
+    """Página de relatórios administrativos"""
+    try:
+        debug_log("📈 ADMIN/RELATORIOS: Rota acessada")
+
+        # Estatísticas para relatórios
+        total_alunos = db.query(Aluno).count()
+        total_avaliacoes = db.query(Avaliacao).count()
+        alunos_ativos = db.query(Aluno).filter(Aluno.ativo == True).count()
+
+        # Dados dos últimos 30 dias
+        from datetime import timedelta
+        data_limite = now_sao_paulo() - timedelta(days=30)
+        avaliacoes_recentes = db.query(Avaliacao).filter(
+            Avaliacao.data >= data_limite
+        ).count()
+
+        info_log("📈 ADMIN/RELATORIOS: Dados carregados")
+
+        return templates.TemplateResponse(
+            "admin_relatorios.html",
+            {
+                "request": request,
+                "total_alunos": total_alunos,
+                "total_avaliacoes": total_avaliacoes,
+                "alunos_ativos": alunos_ativos,
+                "avaliacoes_recentes": avaliacoes_recentes,
+                "is_admin": True
+            }
+        )
+
+    except Exception as e:
+        error_log(f"❌ ADMIN/RELATORIOS: Erro: {str(e)}")
+        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+
+
+@router.get("/backup", response_class=HTMLResponse)
+@require_admin()
+async def admin_backup(
+    request: Request,
+    db: Session = Depends(get_db),
+    session_data=None,
+    jwt_data=None
+):
+    """Página de backup e manutenção"""
+    try:
+        debug_log("💾 ADMIN/BACKUP: Rota acessada")
+
+        # Informações do sistema para backup
+        total_alunos = db.query(Aluno).count()
+        total_avaliacoes = db.query(Avaliacao).count()
+
+        info_log("💾 ADMIN/BACKUP: Página carregada")
+
+        return templates.TemplateResponse(
+            "admin_backup.html",
+            {
+                "request": request,
+                "total_alunos": total_alunos,
+                "total_avaliacoes": total_avaliacoes,
+                "is_admin": True
+            }
+        )
+
+    except Exception as e:
+        error_log(f"❌ ADMIN/BACKUP: Erro: {str(e)}")
+        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+
+
+@router.get("/nova-avaliacao", response_class=HTMLResponse)
+@require_admin()
+async def admin_nova_avaliacao(
+    request: Request,
+    db: Session = Depends(get_db),
+    session_data=None,
+    jwt_data=None
+):
+    """Página para admin criar nova avaliação para qualquer aluno"""
+    try:
+        debug_log("📝 ADMIN/NOVA-AVALIACAO: Rota acessada")
+
+        # Buscar todos os alunos ativos
+        alunos = db.query(Aluno).filter(Aluno.ativo == True).order_by(Aluno.nome).all()
+
+        info_log(f"📝 ADMIN/NOVA-AVALIACAO: {len(alunos)} alunos disponíveis")
+
+        return templates.TemplateResponse(
+            "admin_nova_avaliacao.html",
+            {
+                "request": request,
+                "alunos": alunos,
+                "data_atual": now_sao_paulo().strftime("%Y-%m-%d"),
+                "is_admin": True
+            }
+        )
+
+    except Exception as e:
+        error_log(f"❌ ADMIN/NOVA-AVALIACAO: Erro: {str(e)}")
+        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+
+
+@router.post("/nova-avaliacao", response_class=HTMLResponse)
+@require_admin()
+async def admin_criar_avaliacao(
+    request: Request,
+    aluno_id: int = Form(...),
+    peso: float = Form(...),
+    altura: float = Form(...),
+    observacoes: str = Form(""),
+    db: Session = Depends(get_db),
+    session_data=None,
+    jwt_data=None
+):
+    """Admin criar nova avaliação para um aluno"""
+    try:
+        debug_log(f"📝 ADMIN/CRIAR-AVALIACAO: Criando avaliação para aluno {aluno_id}")
+
+        # Buscar aluno
+        aluno = db.query(Aluno).filter(Aluno.id == aluno_id).first()
+        if not aluno:
+            raise HTTPException(status_code=404, detail="Aluno não encontrado")
+
+        # Criar nova avaliação
+        nova_avaliacao = Avaliacao(
+            aluno_id=aluno_id,
+            nome=aluno.nome,
+            data=now_sao_paulo(),
+            peso_kg=peso,
+            altura_cm=altura,
+            observacoes_medidas=observacoes or ""
+        )
+
+        # Calcular IMC
+        if altura > 0:
+            imc = peso / ((altura / 100) ** 2)
+            nova_avaliacao.imc = round(imc, 2)
+
+        db.add(nova_avaliacao)
+        db.commit()
+        db.refresh(nova_avaliacao)
+
+        info_log(f"✅ ADMIN/CRIAR-AVALIACAO: Avaliação criada para {aluno.nome} - IMC: {nova_avaliacao.imc}")
+
+        # Redirecionar para lista de avaliações com sucesso
+        return RedirectResponse(url="/admin/avaliacoes?success=true", status_code=303)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        error_log(f"❌ ADMIN/CRIAR-AVALIACAO: Erro: {str(e)}")
+        raise HTTPException(status_code=500, detail="Erro interno do servidor")
