@@ -3,7 +3,138 @@
 {% block page_title %}Gerenciar Alunos{% endblock %}
 {% block page_subtitle %}Visualize, gerencie e redefina senhas dos alunos registrados{% endblock %}
 
+{% block head_extra %}
+<style>
+  .stats-card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .stats-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  }
+
+  .table-responsive {
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  }
+
+  .table th {
+    background: linear-gradient(135deg, #6f42c1 0%, #d63384 100%);
+    color: white;
+    border: none;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+  }
+
+  .table td {
+    vertical-align: middle;
+    border-color: rgba(0,0,0,0.05);
+    padding: 1rem 0.75rem;
+  }
+
+  .table tbody tr:hover {
+    background-color: rgba(111, 66, 193, 0.05);
+    transform: scale(1.001);
+    transition: all 0.2s ease;
+  }
+
+  .badge {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.8rem;
+    border-radius: 8px;
+  }
+
+  .btn-group-sm .btn {
+    border-radius: 6px;
+    margin: 0 2px;
+  }
+
+  .progress-indicator {
+    width: 100%;
+    height: 4px;
+    background: #e9ecef;
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 5px;
+  }
+
+  .progress-bar {
+    height: 100%;
+    transition: width 0.6s ease;
+  }
+
+  .alert-metric {
+    padding: 0.5rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
+<!-- Estatísticas Gerais -->
+<div class="row mb-4">
+  {% set alunos_com_avaliacoes = alunos|selectattr('total_avaliacoes', '>', 0)|list %}
+  {% set total_avaliacoes = alunos|sum(attribute='total_avaliacoes') %}
+  {% set alunos_ativos = alunos|selectattr('aluno.ativo', 'equalto', true)|list %}
+
+  <div class="col-md-3 mb-3">
+    <div class="card bg-primary text-white stats-card">
+      <div class="card-body text-center">
+        <i class="bi bi-people-fill display-4 mb-2"></i>
+        <h3 class="fw-bold">{{ alunos|length }}</h3>
+        <p class="mb-0">Total de Alunos</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3 mb-3">
+    <div class="card bg-success text-white stats-card">
+      <div class="card-body text-center">
+        <i class="bi bi-person-check-fill display-4 mb-2"></i>
+        <h3 class="fw-bold">{{ alunos_ativos|length }}</h3>
+        <p class="mb-0">Alunos Ativos</p>
+        <div class="progress-indicator">
+          <div class="progress-bar bg-light" style="width: {{ (alunos_ativos|length / alunos|length * 100) if alunos|length > 0 else 0 }}%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3 mb-3">
+    <div class="card bg-info text-white stats-card">
+      <div class="card-body text-center">
+        <i class="bi bi-clipboard-data-fill display-4 mb-2"></i>
+        <h3 class="fw-bold">{{ total_avaliacoes }}</h3>
+        <p class="mb-0">Total Avaliações</p>
+        {% if alunos|length > 0 %}
+          <small>Média: {{ "%.1f"|format(total_avaliacoes / alunos|length) }} por aluno</small>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3 mb-3">
+    <div class="card bg-warning text-white stats-card">
+      <div class="card-body text-center">
+        <i class="bi bi-graph-up display-4 mb-2"></i>
+        <h3 class="fw-bold">{{ alunos_com_avaliacoes|length }}</h3>
+        <p class="mb-0">Com Progresso</p>
+        <div class="progress-indicator">
+          <div class="progress-bar bg-light" style="width: {{ (alunos_com_avaliacoes|length / alunos|length * 100) if alunos|length > 0 else 0 }}%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="row">
   <div class="col-12">
     <div class="card admin-card">
@@ -22,27 +153,108 @@
                 <th>ID</th>
                 <th>Nome</th>
                 <th>Email</th>
-                <th>Telefone</th>
+                <th>Avaliações</th>
+                <th>Última Avaliação</th>
+                <th>Peso Atual</th>
+                <th>IMC</th>
+                <th>Progresso</th>
                 <th>Status</th>
-                <th>Data Registro</th>
                 <th>Ações</th>
               </tr>
             </thead>
             <tbody>
-              {% for aluno in alunos %}
+              {% for aluno_stat in alunos %}
+              {% set aluno = aluno_stat.aluno %}
               <tr>
                 <td>{{ aluno.id }}</td>
                 <td>
-                  <strong>{{ aluno.nome }}</strong>
+                  <div class="d-flex align-items-center">
+                    <div class="me-2">
+                      {% if aluno_stat.total_avaliacoes > 0 %}
+                        <i class="bi bi-person-check-fill text-success"></i>
+                      {% else %}
+                        <i class="bi bi-person text-muted"></i>
+                      {% endif %}
+                    </div>
+                    <div>
+                      <strong>{{ aluno.nome }}</strong>
+                      <br><small class="text-muted">{{ aluno.email }}</small>
+                    </div>
+                  </div>
                 </td>
                 <td>
                   <i class="bi bi-envelope me-1"></i>
                   {{ aluno.email }}
                 </td>
+                <td class="text-center">
+                  <span class="badge bg-primary fs-6">{{ aluno_stat.total_avaliacoes }}</span>
+                  {% if aluno_stat.total_avaliacoes == 0 %}
+                    <br><small class="text-muted">Nenhuma</small>
+                  {% else %}
+                    <br><small class="text-muted">avaliações</small>
+                  {% endif %}
+                </td>
                 <td>
-                  {% if aluno.telefone %}
-                    <i class="bi bi-telephone me-1"></i>
-                    {{ aluno.telefone }}
+                  {% if aluno_stat.data_ultima_avaliacao %}
+                    <strong>{{ aluno_stat.data_ultima_avaliacao.strftime('%d/%m/%Y') }}</strong>
+                    <br><small class="text-muted">{{ aluno_stat.data_ultima_avaliacao.strftime('%H:%M') }}</small>
+                  {% else %}
+                    <span class="text-muted">-</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if aluno_stat.peso_atual %}
+                    <strong>{{ "%.1f"|format(aluno_stat.peso_atual) }} kg</strong>
+                    {% if aluno_stat.altura_atual %}
+                      <br><small class="text-muted">{{ "%.0f"|format(aluno_stat.altura_atual) }} cm</small>
+                    {% endif %}
+                  {% else %}
+                    <span class="text-muted">-</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if aluno_stat.imc_atual %}
+                    {% set imc = aluno_stat.imc_atual %}
+                    {% if imc < 18.5 %}
+                      <span class="badge bg-info">{{ "%.1f"|format(imc) }}</span>
+                      <br><small class="text-muted">Baixo peso</small>
+                    {% elif imc < 25 %}
+                      <span class="badge bg-success">{{ "%.1f"|format(imc) }}</span>
+                      <br><small class="text-muted">Normal</small>
+                    {% elif imc < 30 %}
+                      <span class="badge bg-warning">{{ "%.1f"|format(imc) }}</span>
+                      <br><small class="text-muted">Sobrepeso</small>
+                    {% else %}
+                      <span class="badge bg-danger">{{ "%.1f"|format(imc) }}</span>
+                      <br><small class="text-muted">Obesidade</small>
+                    {% endif %}
+                  {% else %}
+                    <span class="text-muted">-</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if aluno_stat.variacao_peso is not none %}
+                    {% if aluno_stat.variacao_peso > 0 %}
+                      <span class="text-warning">
+                        <i class="bi bi-arrow-up"></i>
+                        +{{ "%.1f"|format(aluno_stat.variacao_peso) }} kg
+                      </span>
+                    {% elif aluno_stat.variacao_peso < 0 %}
+                      <span class="text-success">
+                        <i class="bi bi-arrow-down"></i>
+                        {{ "%.1f"|format(aluno_stat.variacao_peso) }} kg
+                      </span>
+                    {% else %}
+                      <span class="text-muted">
+                        <i class="bi bi-dash"></i>
+                        Sem alteração
+                      </span>
+                    {% endif %}
+                  {% elif aluno_stat.total_avaliacoes > 0 %}
+                    <span class="text-muted">
+                      <i class="bi bi-clock"></i>
+                      Dados únicos
+                    </span>
                   {% else %}
                     <span class="text-muted">-</span>
                   {% endif %}
@@ -55,29 +267,20 @@
                   {% endif %}
                 </td>
                 <td>
-                  <small class="text-muted">
-                    {{ aluno.created_at.strftime('%d/%m/%Y %H:%M') if aluno.created_at else '-' }}
-                  </small>
-                </td>
-                <td>
                   <div class="btn-group btn-group-sm">
-                    <a href="/admin/aluno/{{ aluno.nome }}" class="btn btn-outline-primary">
+                    <a href="/admin/aluno/{{ aluno.nome }}" class="btn btn-outline-primary" title="Ver histórico completo">
                       <i class="bi bi-eye"></i>
-                      Ver Histórico
                     </a>
-                    <button class="btn btn-outline-warning" onclick="resetarSenha({{ aluno.id }}, '{{ aluno.nome }}')">
+                    <button class="btn btn-outline-warning" onclick="resetarSenha({{ aluno.id }}, '{{ aluno.nome }}')" title="Resetar senha">
                       <i class="bi bi-key"></i>
-                      Reset Senha
                     </button>
                     {% if aluno.ativo %}
-                      <button class="btn btn-outline-danger" onclick="toggleStatus({{ aluno.id }}, false)">
+                      <button class="btn btn-outline-danger" onclick="toggleStatus({{ aluno.id }}, false)" title="Desativar aluno">
                         <i class="bi bi-person-x"></i>
-                        Desativar
                       </button>
                     {% else %}
-                      <button class="btn btn-outline-success" onclick="toggleStatus({{ aluno.id }}, true)">
+                      <button class="btn btn-outline-success" onclick="toggleStatus({{ aluno.id }}, true)" title="Ativar aluno">
                         <i class="bi bi-person-check"></i>
-                        Ativar
                       </button>
                     {% endif %}
                   </div>

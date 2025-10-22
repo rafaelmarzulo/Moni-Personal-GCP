@@ -54,15 +54,48 @@ async def admin_lista_alunos(
         # Buscar todos os alunos
         alunos = db.query(Aluno).order_by(Aluno.nome).all()
 
-        # Buscar estatísticas básicas para cada aluno
+        # Buscar estatísticas detalhadas para cada aluno
         alunos_stats = []
         for aluno in alunos:
-            total_avaliacoes = db.query(Avaliacao).filter(Avaliacao.aluno_id == aluno.id).count()
+            # Buscar todas as avaliações do aluno
+            avaliacoes = db.query(Avaliacao).filter(
+                Avaliacao.aluno_id == aluno.id
+            ).order_by(Avaliacao.data.desc()).all()
+
+            total_avaliacoes = len(avaliacoes)
+
+            # Estatísticas mais detalhadas
+            ultima_avaliacao = avaliacoes[0] if avaliacoes else None
+            primeira_avaliacao = avaliacoes[-1] if avaliacoes else None
+
+            # Calcular progressos
+            peso_atual = ultima_avaliacao.peso_kg if ultima_avaliacao and ultima_avaliacao.peso_kg else None
+            peso_inicial = primeira_avaliacao.peso_kg if primeira_avaliacao and primeira_avaliacao.peso_kg else None
+
+            imc_atual = ultima_avaliacao.imc if ultima_avaliacao and ultima_avaliacao.imc else None
+            altura_atual = ultima_avaliacao.altura_cm if ultima_avaliacao and ultima_avaliacao.altura_cm else None
+
+            # Calcular variação de peso
+            variacao_peso = None
+            if peso_atual is not None and peso_inicial is not None and total_avaliacoes > 1:
+                variacao_peso = peso_atual - peso_inicial
+
+            # Data da última avaliação
+            data_ultima_avaliacao = None
+            if ultima_avaliacao and ultima_avaliacao.data:
+                data_ultima_avaliacao = utc_to_sao_paulo(ultima_avaliacao.data)
 
             alunos_stats.append({
                 "aluno": aluno,
                 "total_avaliacoes": total_avaliacoes,
-                "ultima_avaliacao": None  # TODO: implementar na próxima iteração
+                "ultima_avaliacao": ultima_avaliacao,
+                "data_ultima_avaliacao": data_ultima_avaliacao,
+                "peso_atual": peso_atual,
+                "peso_inicial": peso_inicial,
+                "variacao_peso": variacao_peso,
+                "imc_atual": imc_atual,
+                "altura_atual": altura_atual,
+                "tem_progresso": total_avaliacoes > 1
             })
 
         info_log(f"📊 ADMIN/ALUNOS: {len(alunos)} alunos encontrados")
