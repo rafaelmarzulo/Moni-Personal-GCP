@@ -58,22 +58,28 @@ async def meu_historico(
             Avaliacao.aluno_id == aluno_id
         ).order_by(Avaliacao.data.desc()).all()
 
-        # Converter objetos Avaliacao para dicionários para evitar erro de serialização JSON
-        avaliacoes = []
-        for av in avaliacoes_raw:
-            avaliacao_dict = {
-                'id': av.id,
-                'peso_kg': av.peso_kg,
-                'altura_cm': av.altura_cm,
-                'imc': av.imc,
-                'data': av.data,
-                'data_local': utc_to_sao_paulo(av.data) if av.data else None,
-                'observacoes_medidas': av.observacoes_medidas,
-                'percentual_gordura': av.percentual_gordura,
-                'circunferencia_cintura': av.circunferencia_cintura,
-                'circunferencia_quadril': av.circunferencia_quadril
-            }
-            avaliacoes.append(avaliacao_dict)
+        # Criar uma classe simples que funciona com Jinja2 mas evita erro de serialização JSON
+        class AvaliacaoDict(dict):
+            def __init__(self, av):
+                super().__init__()
+                data_local = utc_to_sao_paulo(av.data) if av.data else None
+                self.update({
+                    'id': av.id,
+                    'peso_kg': av.peso_kg,
+                    'altura_cm': av.altura_cm,
+                    'imc': av.imc,
+                    'data': av.data,
+                    'data_local': data_local,
+                    'observacoes_medidas': av.observacoes_medidas,
+                    'percentual_gordura': av.percentual_gordura,
+                    'circunferencia_cintura': av.circunferencia_cintura,
+                    'circunferencia_quadril': av.circunferencia_quadril
+                })
+                # Adicionar atributos para compatibilidade com template
+                for k, v in self.items():
+                    setattr(self, k, v)
+
+        avaliacoes = [AvaliacaoDict(av) for av in avaliacoes_raw]
 
         info_log(f"📊 HISTORICO: {len(avaliacoes)} avaliações para {aluno.nome}")
 
