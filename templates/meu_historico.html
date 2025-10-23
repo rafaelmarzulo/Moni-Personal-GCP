@@ -110,6 +110,42 @@
     color: var(--primary-gold);
   }
 
+  .metric-trend {
+    margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+  }
+
+  .metric-trend i {
+    font-size: 0.9rem;
+  }
+
+  .metric-trend small {
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .insight-item {
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    margin-bottom: 0.5rem;
+    transition: all 0.3s ease;
+    border-left: 3px solid transparent;
+  }
+
+  .insight-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-left-color: var(--primary-gold);
+    transform: translateX(3px);
+  }
+
+  .insight-item i {
+    font-size: 1.1rem;
+  }
+
   .success-alert {
     background: rgba(75, 192, 192, 0.1) !important;
     border: 1px solid rgba(75, 192, 192, 0.3) !important;
@@ -146,6 +182,38 @@
     .evaluation-card {
       margin-bottom: 1rem;
     }
+
+    .metric-card {
+      margin-bottom: 1rem;
+    }
+
+    .metric-trend {
+      margin-top: 0.25rem;
+    }
+
+    .metric-trend small {
+      font-size: 0.7rem;
+    }
+
+    .insight-item {
+      padding: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .insight-item strong {
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+
+    /* Stack chart cards vertically on mobile */
+    .row.g-4 .col-md-6 {
+      margin-bottom: 1.5rem;
+    }
+
+    /* Adjust chart height for mobile */
+    canvas {
+      height: 200px !important;
+    }
   }
 
   @media (max-width: 480px) {
@@ -155,6 +223,54 @@
 
     .progress-section {
       padding: 1rem;
+    }
+
+    .metric-value {
+      font-size: 1rem;
+    }
+
+    .metric-card {
+      padding: 0.75rem;
+    }
+
+    /* Make evaluation cards more compact */
+    .evaluation-card .card-body {
+      padding: 1rem 0.75rem;
+    }
+
+    .evaluation-card .row.g-3 {
+      --bs-gutter-x: 0.5rem;
+      --bs-gutter-y: 0.75rem;
+    }
+
+    /* Smaller text in cards */
+    .evaluation-card small {
+      font-size: 0.75rem;
+    }
+
+    .evaluation-card strong {
+      font-size: 0.9rem;
+    }
+
+    /* Compact insights */
+    .insight-item {
+      padding: 0.5rem;
+      font-size: 0.85rem;
+    }
+
+    .insight-item i {
+      font-size: 1rem;
+    }
+
+    /* Adjust button spacing */
+    .d-flex.gap-3 {
+      gap: 0.5rem !important;
+      flex-direction: column;
+    }
+
+    .btn {
+      font-size: 0.9rem;
+      padding: 0.5rem 1rem;
     }
   }
 </style>
@@ -199,13 +315,13 @@
 </div>
 
 {% if avaliacoes %}
-  <!-- Progress Overview -->
+  <!-- Enhanced Progress Overview -->
   <div class="progress-section">
     <h5 class="mb-4 text-center">
       <i class="bi bi-graph-up me-2"></i>
       Resumo do seu Progresso
     </h5>
-    <div class="row g-3">
+    <div class="row g-3 mb-4">
       {% if avaliacoes|length > 0 %}
         {% set latest = avaliacoes[0] %}
         {% set oldest = avaliacoes[-1] if avaliacoes|length > 1 else avaliacoes[0] %}
@@ -214,6 +330,21 @@
           <div class="metric-card">
             <div class="metric-value">{{ "%.1f"|format(latest.peso_kg) if latest.peso_kg else 'N/A' }}</div>
             <small class="text-muted">Peso Atual (kg)</small>
+            {% if avaliacoes|length > 1 %}
+              {% set peso_diff = latest.peso_kg - oldest.peso_kg if latest.peso_kg and oldest.peso_kg else 0 %}
+              <div class="metric-trend">
+                {% if peso_diff > 0 %}
+                  <i class="bi bi-arrow-up text-warning"></i>
+                  <small class="text-warning">+{{ "%.1f"|format(peso_diff) }}kg</small>
+                {% elif peso_diff < 0 %}
+                  <i class="bi bi-arrow-down text-success"></i>
+                  <small class="text-success">{{ "%.1f"|format(peso_diff) }}kg</small>
+                {% else %}
+                  <i class="bi bi-dash text-info"></i>
+                  <small class="text-info">Estável</small>
+                {% endif %}
+              </div>
+            {% endif %}
           </div>
         </div>
 
@@ -221,29 +352,198 @@
           <div class="metric-card">
             <div class="metric-value">{{ "%.1f"|format(latest.imc) if latest.imc else 'N/A' }}</div>
             <small class="text-muted">IMC Atual</small>
+            {% if avaliacoes|length > 1 and latest.imc and oldest.imc %}
+              {% set imc_diff = latest.imc - oldest.imc %}
+              <div class="metric-trend">
+                {% if imc_diff > 0 %}
+                  <i class="bi bi-arrow-up {% if latest.imc > 25 %}text-warning{% else %}text-primary{% endif %}"></i>
+                  <small class="{% if latest.imc > 25 %}text-warning{% else %}text-primary{% endif %}">+{{ "%.1f"|format(imc_diff) }}</small>
+                {% elif imc_diff < 0 %}
+                  <i class="bi bi-arrow-down text-success"></i>
+                  <small class="text-success">{{ "%.1f"|format(imc_diff) }}</small>
+                {% else %}
+                  <i class="bi bi-dash text-info"></i>
+                  <small class="text-info">Estável</small>
+                {% endif %}
+              </div>
+            {% endif %}
           </div>
         </div>
-
-        {% if avaliacoes|length > 1 %}
-          <div class="col-6 col-md-3">
-            <div class="metric-card">
-              {% set peso_diff = latest.peso_kg - oldest.peso_kg if latest.peso_kg and oldest.peso_kg else 0 %}
-              <div class="metric-value {% if peso_diff > 0 %}text-warning{% elif peso_diff < 0 %}text-success{% else %}text-info{% endif %}">
-                {{ "%+.1f"|format(peso_diff) }}
-              </div>
-              <small class="text-muted">Variação Peso (kg)</small>
-            </div>
-          </div>
-        {% endif %}
 
         <div class="col-6 col-md-3">
           <div class="metric-card">
             <div class="metric-value text-primary">{{ avaliacoes|length }}</div>
-            <small class="text-muted">Avaliações</small>
+            <small class="text-muted">Total Avaliações</small>
+            {% if avaliacoes|length >= 5 %}
+              <div class="metric-trend">
+                <i class="bi bi-trophy text-warning"></i>
+                <small class="text-warning">Consistente!</small>
+              </div>
+            {% elif avaliacoes|length >= 3 %}
+              <div class="metric-trend">
+                <i class="bi bi-graph-up text-success"></i>
+                <small class="text-success">Progredindo</small>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="col-6 col-md-3">
+          <div class="metric-card">
+            {% if avaliacoes[0].data_local %}
+              {% set today = avaliacoes[0].data_local.date() %}
+              {% set last_eval = avaliacoes[0].data_local.date() %}
+              {% set days_since = (today - last_eval).days %}
+              <div class="metric-value text-info">{{ days_since if days_since > 0 else 'Hoje' }}</div>
+              <small class="text-muted">{{ 'Dias atrás' if days_since > 0 else 'Última Avaliação' }}</small>
+              <div class="metric-trend">
+                {% if days_since == 0 %}
+                  <i class="bi bi-calendar-check text-success"></i>
+                  <small class="text-success">Hoje!</small>
+                {% elif days_since <= 7 %}
+                  <i class="bi bi-calendar-week text-primary"></i>
+                  <small class="text-primary">Recente</small>
+                {% elif days_since <= 30 %}
+                  <i class="bi bi-calendar-month text-warning"></i>
+                  <small class="text-warning">Este mês</small>
+                {% else %}
+                  <i class="bi bi-calendar-x text-danger"></i>
+                  <small class="text-danger">Há tempo</small>
+                {% endif %}
+              </div>
+            {% else %}
+              <div class="metric-value text-info">N/A</div>
+              <small class="text-muted">Última Avaliação</small>
+            {% endif %}
           </div>
         </div>
       {% endif %}
     </div>
+
+    <!-- Progress Charts Section -->
+    {% if avaliacoes|length > 1 %}
+    <div class="row g-4">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header">
+            <h6 class="mb-0">
+              <i class="bi bi-graph-up me-2"></i>
+              Evolução do Peso
+            </h6>
+          </div>
+          <div class="card-body">
+            <canvas id="weightChart" style="height: 250px;"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header">
+            <h6 class="mb-0">
+              <i class="bi bi-speedometer2 me-2"></i>
+              Evolução do IMC
+            </h6>
+          </div>
+          <div class="card-body">
+            <canvas id="imcChart" style="height: 250px;"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Progress Insights -->
+    {% if avaliacoes|length > 1 %}
+    <div class="row mt-4">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h6 class="mb-0">
+              <i class="bi bi-lightbulb me-2"></i>
+              Insights do seu Progresso
+            </h6>
+          </div>
+          <div class="card-body">
+            <div class="row g-3">
+              {% set latest = avaliacoes[0] %}
+              {% set previous = avaliacoes[1] if avaliacoes|length > 1 else None %}
+              {% set oldest = avaliacoes[-1] %}
+
+              {% if previous %}
+                <!-- Recent Progress -->
+                <div class="col-md-6">
+                  <div class="insight-item">
+                    <i class="bi bi-calendar-week text-primary me-2"></i>
+                    <strong>Progresso Recente:</strong>
+                    {% set recent_weight_diff = latest.peso_kg - previous.peso_kg if latest.peso_kg and previous.peso_kg else 0 %}
+                    {% if recent_weight_diff > 0.5 %}
+                      <span class="text-warning">Ganhou {{ "%.1f"|format(recent_weight_diff) }}kg desde a última avaliação</span>
+                    {% elif recent_weight_diff < -0.5 %}
+                      <span class="text-success">Perdeu {{ "%.1f"|format(abs(recent_weight_diff)) }}kg desde a última avaliação</span>
+                    {% else %}
+                      <span class="text-info">Peso estável desde a última avaliação</span>
+                    {% endif %}
+                  </div>
+                </div>
+              {% endif %}
+
+              <!-- Overall Trend -->
+              <div class="col-md-6">
+                <div class="insight-item">
+                  <i class="bi bi-graph-up text-success me-2"></i>
+                  <strong>Tendência Geral:</strong>
+                  {% set total_weight_diff = latest.peso_kg - oldest.peso_kg if latest.peso_kg and oldest.peso_kg else 0 %}
+                  {% if total_weight_diff > 2 %}
+                    <span class="text-warning">Ganho de peso significativo ({{ "%.1f"|format(total_weight_diff) }}kg)</span>
+                  {% elif total_weight_diff < -2 %}
+                    <span class="text-success">Perda de peso significativa ({{ "%.1f"|format(abs(total_weight_diff)) }}kg)</span>
+                  {% elif abs(total_weight_diff) <= 2 %}
+                    <span class="text-info">Peso mantido com variação normal</span>
+                  {% endif %}
+                </div>
+              </div>
+
+              <!-- IMC Status -->
+              {% if latest.imc %}
+              <div class="col-md-6">
+                <div class="insight-item">
+                  <i class="bi bi-speedometer2 text-info me-2"></i>
+                  <strong>Status IMC:</strong>
+                  {% if latest.imc < 18.5 %}
+                    <span class="text-primary">Abaixo do peso ideal - considere ganhar massa</span>
+                  {% elif latest.imc <= 24.9 %}
+                    <span class="text-success">Peso ideal - continue mantendo!</span>
+                  {% elif latest.imc <= 29.9 %}
+                    <span class="text-warning">Sobrepeso - foque em exercícios e alimentação</span>
+                  {% else %}
+                    <span class="text-danger">Obesidade - recomenda-se acompanhamento profissional</span>
+                  {% endif %}
+                </div>
+              </div>
+              {% endif %}
+
+              <!-- Consistency -->
+              <div class="col-md-6">
+                <div class="insight-item">
+                  <i class="bi bi-award text-warning me-2"></i>
+                  <strong>Constância:</strong>
+                  {% if avaliacoes|length >= 10 %}
+                    <span class="text-success">Excelente! Mais de 10 avaliações registradas</span>
+                  {% elif avaliacoes|length >= 5 %}
+                    <span class="text-primary">Bom progresso! Continue registrando</span>
+                  {% elif avaliacoes|length >= 3 %}
+                    <span class="text-warning">Começando bem! Tente avaliar regularmente</span>
+                  {% else %}
+                    <span class="text-info">Início da jornada - registre mais avaliações</span>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
   </div>
 
   <!-- Evaluations History -->
@@ -377,7 +677,192 @@
 {% endblock %}
 
 {% block scripts %}
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
+// Chart data preparation
+const avaliacoes = {{ avaliacoes|tojson if avaliacoes else '[]' }};
+
+// Sort evaluations by date (oldest first for charts)
+const sortedAvaliacoes = [...avaliacoes].reverse();
+
+// Prepare chart data
+const chartLabels = sortedAvaliacoes.map(av => {
+  const date = new Date(av.data_local || av.data_avaliacao);
+  return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+});
+
+const weightData = sortedAvaliacoes.map(av => av.peso_kg || null);
+const imcData = sortedAvaliacoes.map(av => av.imc || null);
+
+// Chart configuration
+const chartConfig = {
+  type: 'line',
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: {
+      intersect: false,
+      mode: 'index'
+    },
+    plugins: {
+      legend: {
+        display: false
+      },
+      tooltip: {
+        backgroundColor: 'rgba(26, 26, 26, 0.9)',
+        titleColor: '#ffffff',
+        bodyColor: '#ffffff',
+        borderColor: 'var(--primary-gold)',
+        borderWidth: 1,
+        cornerRadius: 8,
+        displayColors: false
+      }
+    },
+    scales: {
+      x: {
+        grid: {
+          color: 'rgba(255, 255, 255, 0.1)'
+        },
+        ticks: {
+          color: 'rgba(255, 255, 255, 0.7)',
+          font: {
+            size: 11
+          }
+        }
+      },
+      y: {
+        grid: {
+          color: 'rgba(255, 255, 255, 0.1)'
+        },
+        ticks: {
+          color: 'rgba(255, 255, 255, 0.7)',
+          font: {
+            size: 11
+          }
+        }
+      }
+    },
+    elements: {
+      line: {
+        tension: 0.4,
+        borderWidth: 3
+      },
+      point: {
+        radius: 6,
+        hoverRadius: 8,
+        borderWidth: 2,
+        backgroundColor: '#ffffff'
+      }
+    }
+  }
+};
+
+// Initialize charts when page loads
+document.addEventListener('DOMContentLoaded', function() {
+  // Weight Chart
+  if (avaliacoes.length > 1) {
+    const weightCtx = document.getElementById('weightChart');
+    if (weightCtx) {
+      new Chart(weightCtx, {
+        ...chartConfig,
+        data: {
+          labels: chartLabels,
+          datasets: [{
+            label: 'Peso (kg)',
+            data: weightData,
+            borderColor: 'var(--primary-gold)',
+            backgroundColor: 'var(--primary-gold)',
+            fill: false
+          }]
+        },
+        options: {
+          ...chartConfig.options,
+          scales: {
+            ...chartConfig.options.scales,
+            y: {
+              ...chartConfig.options.scales.y,
+              title: {
+                display: true,
+                text: 'Peso (kg)',
+                color: 'rgba(255, 255, 255, 0.7)',
+                font: {
+                  size: 12,
+                  weight: 'bold'
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // IMC Chart
+    const imcCtx = document.getElementById('imcChart');
+    if (imcCtx) {
+      new Chart(imcCtx, {
+        ...chartConfig,
+        data: {
+          labels: chartLabels,
+          datasets: [{
+            label: 'IMC',
+            data: imcData,
+            borderColor: '#4bc0c0',
+            backgroundColor: '#4bc0c0',
+            fill: false
+          }]
+        },
+        options: {
+          ...chartConfig.options,
+          scales: {
+            ...chartConfig.options.scales,
+            y: {
+              ...chartConfig.options.scales.y,
+              title: {
+                display: true,
+                text: 'IMC',
+                color: 'rgba(255, 255, 255, 0.7)',
+                font: {
+                  size: 12,
+                  weight: 'bold'
+                }
+              },
+              min: 15,
+              max: 35,
+              // Add IMC reference lines
+              afterDraw: function(chart) {
+                const ctx = chart.ctx;
+                const yAxis = chart.scales.y;
+
+                // IMC reference lines
+                const references = [
+                  { value: 18.5, color: '#36a2eb', label: 'Baixo peso' },
+                  { value: 25, color: '#4bc0c0', label: 'Normal' },
+                  { value: 30, color: '#ffce56', label: 'Sobrepeso' }
+                ];
+
+                references.forEach(ref => {
+                  const y = yAxis.getPixelForValue(ref.value);
+                  ctx.save();
+                  ctx.strokeStyle = ref.color;
+                  ctx.setLineDash([5, 5]);
+                  ctx.lineWidth = 1;
+                  ctx.beginPath();
+                  ctx.moveTo(chart.chartArea.left, y);
+                  ctx.lineTo(chart.chartArea.right, y);
+                  ctx.stroke();
+                  ctx.restore();
+                });
+              }
+            }
+          }
+        }
+      });
+    }
+  }
+});
+
 // Export functionality
 function exportMyData() {
   // Show loading state
