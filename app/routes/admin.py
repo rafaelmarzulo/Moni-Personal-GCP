@@ -618,6 +618,7 @@ async def admin_criar_avaliacao(
 @router.get("/avaliacao/{avaliacao_id}")
 @require_admin()
 async def admin_detalhes_avaliacao(
+    request: Request,
     avaliacao_id: int,
     db: Session = Depends(get_db),
     session_data=None,
