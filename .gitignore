@@ -144,3 +144,10 @@ node_modules/
 
 # Ignorar arquivos de credenciais JSON
 *.json
+
+# Test files and cookies
+test_*.txt
+admin_*.txt
+headers.txt
+response.txt
+*.cookies
