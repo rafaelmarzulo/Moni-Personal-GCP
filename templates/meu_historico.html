@@ -479,7 +479,7 @@
                     {% if recent_weight_diff > 0.5 %}
                       <span class="text-warning">Ganhou {{ "%.1f"|format(recent_weight_diff) }}kg desde a última avaliação</span>
                     {% elif recent_weight_diff < -0.5 %}
-                      <span class="text-success">Perdeu {{ "%.1f"|format(abs(recent_weight_diff)) }}kg desde a última avaliação</span>
+                      <span class="text-success">Perdeu {{ "%.1f"|format(-recent_weight_diff) }}kg desde a última avaliação</span>
                     {% else %}
                       <span class="text-info">Peso estável desde a última avaliação</span>
                     {% endif %}
@@ -496,8 +496,8 @@
                   {% if total_weight_diff > 2 %}
                     <span class="text-warning">Ganho de peso significativo ({{ "%.1f"|format(total_weight_diff) }}kg)</span>
                   {% elif total_weight_diff < -2 %}
-                    <span class="text-success">Perda de peso significativa ({{ "%.1f"|format(abs(total_weight_diff)) }}kg)</span>
-                  {% elif abs(total_weight_diff) <= 2 %}
+                    <span class="text-success">Perda de peso significativa ({{ "%.1f"|format(-total_weight_diff) }}kg)</span>
+                  {% elif total_weight_diff <= 2 and total_weight_diff >= -2 %}
                     <span class="text-info">Peso mantido com variação normal</span>
                   {% endif %}
                 </div>
