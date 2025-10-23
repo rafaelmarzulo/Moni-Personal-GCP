@@ -13,6 +13,7 @@ from app.models import Aluno, Avaliacao
 from app.middleware.auth import require_admin
 from app.utils.logging import info_log, debug_log, error_log
 from app.utils.datetime_utils import now_sao_paulo, utc_to_sao_paulo
+from app.core.config import app_logs
 
 # Configurar router
 router = APIRouter(prefix="/admin", tags=["admin"])

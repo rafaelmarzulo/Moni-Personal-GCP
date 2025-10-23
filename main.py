@@ -21,6 +21,10 @@ from app.routes.public import router as public_router
 from app.routes.admin import router as admin_router
 from app.routes.student import router as student_router
 
+# Importar configurações para debug
+from app.core.config import app_logs
+from app.middleware.auth import require_admin
+
 # Importar database
 from app.core.database import SessionLocal, engine, Base, get_db
 
@@ -95,6 +99,38 @@ async def health_check():
         return {"status": "healthy", "timestamp": datetime.now().isoformat()}
     except Exception as e:
         return {"status": "unhealthy", "error": str(e)}
+
+
+# ==================== DEBUG ROUTES ====================
+
+@app.get("/debug/logs", response_class=HTMLResponse)
+@require_admin()
+async def debug_logs(request: Request, session_data=None, jwt_data=None):
+    """Página de logs do sistema para debug"""
+    try:
+        # Converter deque para lista e inverter para mostrar mais recentes primeiro
+        logs_list = list(app_logs)
+        logs_list.reverse()
+
+        return templates.TemplateResponse(
+            "admin_logs.html",
+            {
+                "request": request,
+                "logs": logs_list,
+                "total_logs": len(logs_list),
+                "is_admin": True
+            }
+        )
+    except Exception as e:
+        return templates.TemplateResponse(
+            "erro.html",
+            {
+                "request": request,
+                "title": "Erro ao carregar logs",
+                "message": f"Erro ao carregar logs do sistema: {str(e)}",
+                "back_url": "/admin/dashboard"
+            }
+        )
 
 
 # ==================== ROTAS LEGADAS (EM MIGRAÇÃO) ====================
