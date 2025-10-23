@@ -193,12 +193,20 @@
 
                 <div class="col-6 col-sm-3 col-lg-2">
                   <small class="text-muted d-block">Peso</small>
-                  <strong>{{ "%.1f"|format(avaliacao.peso) }} kg</strong>
+                  {% if avaliacao.peso_kg %}
+                    <strong>{{ "%.1f"|format(avaliacao.peso_kg) }} kg</strong>
+                  {% else %}
+                    <span class="text-muted">N/A</span>
+                  {% endif %}
                 </div>
 
                 <div class="col-6 col-sm-3 col-lg-2">
                   <small class="text-muted d-block">Altura</small>
-                  <strong>{{ "%.0f"|format(avaliacao.altura) }} cm</strong>
+                  {% if avaliacao.altura_cm %}
+                    <strong>{{ "%.0f"|format(avaliacao.altura_cm) }} cm</strong>
+                  {% else %}
+                    <span class="text-muted">N/A</span>
+                  {% endif %}
                 </div>
 
                 <div class="col-12 col-sm-6 col-lg-2">
