@@ -58,10 +58,59 @@ def init_database():
         # Criar todas as tabelas se não existirem
         Base.metadata.create_all(bind=engine)
         info_log("✅ Banco de dados inicializado automaticamente")
+
+        # Inicializar usuários padrão
+        init_default_users()
+
         return True
     except Exception as e:
         info_log(f"❌ Erro ao inicializar banco: {str(e)}")
         return False
+
+
+def init_default_users():
+    """Inicializa usuários padrão se não existirem"""
+    try:
+        from app.services.auth_service import hash_password
+
+        with SessionLocal() as db:
+            # Verificar se já existem usuários
+            usuario_count = db.query(Usuario).count()
+
+            if usuario_count > 0:
+                info_log("ℹ️ Usuários já existem no sistema")
+                return
+
+            # Criar usuário administrador
+            admin_user = Usuario(
+                email="admin@monipersonal.com",
+                nome="Administrador",
+                senha_hash=hash_password("Monica@1985"),
+                tipo="admin",
+                ativo=True,
+                created_at=datetime.now()
+            )
+
+            # Criar usuário aluno Rafael
+            rafael_user = Usuario(
+                email="rafaelmarzulo@gmail.com",
+                nome="Rafael Marzulo",
+                senha_hash=hash_password("teste123"),
+                tipo="aluno",
+                ativo=True,
+                created_at=datetime.now()
+            )
+
+            db.add(admin_user)
+            db.add(rafael_user)
+            db.commit()
+
+            info_log("✅ Usuários padrão criados:")
+            info_log("   - Admin: admin@monipersonal.com / Monica@1985")
+            info_log("   - Aluno: rafaelmarzulo@gmail.com / teste123")
+
+    except Exception as e:
+        info_log(f"❌ Erro ao criar usuários padrão: {str(e)}")
 
 
 # ==================== INCLUIR ROTAS ====================
@@ -102,6 +151,58 @@ async def health_check():
 
 
 # ==================== DEBUG ROUTES ====================
+
+@app.get("/debug/users")
+async def debug_users():
+    """Endpoint para verificar/criar usuários no Supabase"""
+    try:
+        with SessionLocal() as db:
+            # Verificar usuários existentes
+            usuarios = db.query(Usuario).all()
+
+            result = {
+                "total_usuarios": len(usuarios),
+                "usuarios": [{"id": u.id, "email": u.email, "nome": u.nome, "tipo": u.tipo, "ativo": u.ativo} for u in usuarios]
+            }
+
+            # Se não há usuários, criar os padrão
+            if len(usuarios) == 0:
+                from app.services.auth_service import hash_password
+
+                # Criar usuário administrador
+                admin_user = Usuario(
+                    email="admin@monipersonal.com",
+                    nome="Administrador",
+                    senha_hash=hash_password("Monica@1985"),
+                    tipo="admin",
+                    ativo=True,
+                    created_at=datetime.now()
+                )
+
+                # Criar usuário aluno Rafael
+                rafael_user = Usuario(
+                    email="rafaelmarzulo@gmail.com",
+                    nome="Rafael Marzulo",
+                    senha_hash=hash_password("teste123"),
+                    tipo="aluno",
+                    ativo=True,
+                    created_at=datetime.now()
+                )
+
+                db.add(admin_user)
+                db.add(rafael_user)
+                db.commit()
+
+                result["message"] = "Usuários padrão criados com sucesso!"
+                result["created_users"] = [
+                    {"email": "admin@monipersonal.com", "senha": "Monica@1985"},
+                    {"email": "rafaelmarzulo@gmail.com", "senha": "teste123"}
+                ]
+
+            return result
+
+    except Exception as e:
+        return {"error": str(e), "type": str(type(e))}
 
 @app.get("/debug/logs", response_class=HTMLResponse)
 @require_admin()
