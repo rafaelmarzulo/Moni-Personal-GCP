@@ -54,25 +54,49 @@ async def meu_historico(
             return RedirectResponse(url="/login")
 
         # Buscar avaliações do aluno
-        avaliacoes = db.query(Avaliacao).filter(
+        avaliacoes_raw = db.query(Avaliacao).filter(
             Avaliacao.aluno_id == aluno_id
         ).order_by(Avaliacao.data.desc()).all()
 
-        # Temporariamente removendo data_local para debug
-        # for avaliacao in avaliacoes:
-        #     if avaliacao.data:
-        #         avaliacao.data_local = utc_to_sao_paulo(avaliacao.data)
+        # Converter tudo para tipos básicos Python para evitar problemas de serialização
+        avaliacoes = []
+        for av in avaliacoes_raw:
+            data_local = utc_to_sao_paulo(av.data) if av.data else None
+
+            # Criar dicionário com apenas tipos básicos
+            avaliacao_dict = {
+                'id': av.id,
+                'peso_kg': float(av.peso_kg) if av.peso_kg else None,
+                'altura_cm': float(av.altura_cm) if av.altura_cm else None,
+                'imc': float(av.imc) if av.imc else None,
+                'data': av.data.strftime('%Y-%m-%d %H:%M:%S') if av.data else None,
+                'data_local': data_local.strftime('%Y-%m-%d %H:%M:%S') if data_local else None,
+                'observacoes_medidas': str(av.observacoes_medidas) if av.observacoes_medidas else '',
+                'percentual_gordura': float(av.percentual_gordura) if av.percentual_gordura else None,
+                'circunferencia_cintura': float(av.circunferencia_cintura) if av.circunferencia_cintura else None,
+                'circunferencia_quadril': float(av.circunferencia_quadril) if av.circunferencia_quadril else None
+            }
+
+            # Usar dicionário simples (sem SimpleNamespace)
+            avaliacoes.append(avaliacao_dict)
 
         try:
             info_log(f"📊 HISTORICO: {len(avaliacoes)} avaliações para {aluno.nome}")
         except Exception as log_error:
             print(f"Erro no log: {log_error}")  # Log simples para debug
 
+        # Converter aluno também
+        aluno_dict = {
+            'id': aluno.id,
+            'nome': str(aluno.nome),
+            'email': str(aluno.email)
+        }
+
         return templates.TemplateResponse(
             "meu_historico.html",
             {
                 "request": request,
-                "aluno": aluno,
+                "aluno": aluno_dict,
                 "avaliacoes": avaliacoes,
                 "total_avaliacoes": len(avaliacoes),
                 "is_admin": False

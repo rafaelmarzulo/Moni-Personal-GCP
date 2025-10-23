@@ -391,9 +391,9 @@
         <div class="col-6 col-md-3">
           <div class="metric-card">
             {% if avaliacoes[0].data_local %}
-              {% set today = avaliacoes[0].data_local.date() %}
-              {% set last_eval = avaliacoes[0].data_local.date() %}
-              {% set days_since = (today - last_eval).days %}
+              {% set today = avaliacoes[0].data_local %}
+              {% set last_eval = avaliacoes[0].data_local %}
+              {% set days_since = 0 %}
               <div class="metric-value text-info">{{ days_since if days_since > 0 else 'Hoje' }}</div>
               <small class="text-muted">{{ 'Dias atrás' if days_since > 0 else 'Última Avaliação' }}</small>
               <div class="metric-trend">
@@ -563,16 +563,16 @@
                 <div class="d-flex flex-column">
                   <strong class="text-primary fs-5">
                     {% if avaliacao.data_local %}
-                      {{ avaliacao.data_local.strftime('%d/%m/%Y') }}
+                      {{ avaliacao.data_local[:10] | replace('-', '/') }}
                     {% else %}
-                      {{ avaliacao.data_avaliacao.strftime('%d/%m/%Y') if avaliacao.data_avaliacao else 'Data não informada' }}
+                      {{ avaliacao.data[:10] | replace('-', '/') if avaliacao.data else 'Data não informada' }}
                     {% endif %}
                   </strong>
                   <small class="text-muted">
                     {% if avaliacao.data_local %}
-                      {{ avaliacao.data_local.strftime('%H:%M') }}
-                    {% elif avaliacao.data_avaliacao %}
-                      {{ avaliacao.data_avaliacao.strftime('%H:%M') }}
+                      {{ avaliacao.data_local[11:16] }}
+                    {% elif avaliacao.data %}
+                      {{ avaliacao.data[11:16] }}
                     {% endif %}
                   </small>
                 </div>
