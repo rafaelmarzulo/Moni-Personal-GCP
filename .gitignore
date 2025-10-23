@@ -141,3 +141,6 @@ node_modules/
 *~
 \#*\#
 .\#*
+
+# Ignorar arquivos de credenciais JSON
+*.json

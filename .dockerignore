@@ -148,3 +148,5 @@ temp/
 # Alembic local (migrations rodadas no deploy)
 alembic.ini.local
 alembic/versions/*.pyc
+# Ignorar arquivos de credenciais JSON
+*.json
