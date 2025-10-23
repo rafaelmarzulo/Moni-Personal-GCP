@@ -204,6 +204,50 @@ async def debug_users():
     except Exception as e:
         return {"error": str(e), "type": str(type(e))}
 
+@app.get("/debug/reset-passwords")
+async def debug_reset_passwords():
+    """Endpoint temporário para resetar senhas dos usuários existentes"""
+    try:
+        from app.services.auth_service import hash_password
+
+        with SessionLocal() as db:
+            # Resetar senha do admin
+            admin = db.query(Usuario).filter(Usuario.email == "admin@monipersonal.com").first()
+            if admin:
+                admin.senha_hash = hash_password("Monica@1985")
+                db.commit()
+
+            # Criar/resetar usuário Rafael na tabela ALUNO (não Usuario)
+            rafael_aluno = db.query(Aluno).filter(Aluno.email == "rafaelmarzulo@gmail.com").first()
+            if not rafael_aluno:
+                rafael_aluno = Aluno(
+                    email="rafaelmarzulo@gmail.com",
+                    nome="Rafael Marzulo",
+                    senha_hash=hash_password("teste123"),
+                    ativo=True,
+                    created_at=datetime.now()
+                )
+                db.add(rafael_aluno)
+            else:
+                rafael_aluno.senha_hash = hash_password("teste123")
+
+            # Remover Rafael da tabela Usuario se existir (estava na tabela errada)
+            rafael_usuario = db.query(Usuario).filter(Usuario.email == "rafaelmarzulo@gmail.com").first()
+            if rafael_usuario:
+                db.delete(rafael_usuario)
+
+            db.commit()
+
+            return {
+                "message": "Senhas resetadas com sucesso!",
+                "users": [
+                    {"email": "admin@monipersonal.com", "senha": "Monica@1985", "status": "senha_resetada"},
+                    {"email": "rafaelmarzulo@gmail.com", "senha": "teste123", "status": "criado_ou_resetado"}
+                ]
+            }
+    except Exception as e:
+        return {"error": str(e), "type": str(type(e))}
+
 @app.get("/debug/logs", response_class=HTMLResponse)
 @require_admin()
 async def debug_logs(request: Request, session_data=None, jwt_data=None):
