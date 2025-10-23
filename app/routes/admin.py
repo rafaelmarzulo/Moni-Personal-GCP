@@ -461,7 +461,7 @@ async def admin_relatorios(
         # Estatísticas para relatórios
         total_alunos = db.query(Aluno).count()
         total_avaliacoes = db.query(Avaliacao).count()
-        alunos_ativos = db.query(Aluno).filter(Aluno.ativo == True).count()
+        count_alunos_ativos = db.query(Aluno).filter(Aluno.ativo == True).count()
 
         # Dados dos últimos 30 dias
         from datetime import timedelta
@@ -469,6 +469,14 @@ async def admin_relatorios(
         avaliacoes_recentes = db.query(Avaliacao).filter(
             Avaliacao.data >= data_limite
         ).count()
+
+        # Top 5 alunos mais ativos (para o template)
+        top_alunos_ativos = db.query(
+            Aluno.nome,
+            func.count(Avaliacao.id).label('total_avaliacoes')
+        ).join(Avaliacao).group_by(Aluno.id, Aluno.nome).order_by(
+            func.count(Avaliacao.id).desc()
+        ).limit(5).all()
 
         info_log("📈 ADMIN/RELATORIOS: Dados carregados")
 
@@ -478,7 +486,8 @@ async def admin_relatorios(
                 "request": request,
                 "total_alunos": total_alunos,
                 "total_avaliacoes": total_avaliacoes,
-                "alunos_ativos": alunos_ativos,
+                "count_alunos_ativos": count_alunos_ativos,
+                "alunos_ativos": top_alunos_ativos,  # Lista para iteração no template
                 "avaliacoes_recentes": avaliacoes_recentes,
                 "is_admin": True
             }
