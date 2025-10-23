@@ -81,6 +81,30 @@
     border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
+/* Forçar fundo escuro no container de logs */
+#logsContainer {
+    background: rgba(26, 26, 26, 0.95) !important;
+    color: #ffffff !important;
+}
+
+/* Garantir que as bordas entre logs tenham tema dark */
+.border-bottom {
+    border-bottom-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Forçar todos os elementos filhos dos logs a terem fundo escuro */
+.log-entry * {
+    color: #ffffff !important;
+}
+
+.log-entry .row {
+    background: transparent !important;
+}
+
+.log-entry .col, .log-entry .col-auto {
+    background: transparent !important;
+}
+
 /* Inputs com tema dark */
 .form-control, .form-select {
     background-color: rgba(255, 255, 255, 0.1) !important;
