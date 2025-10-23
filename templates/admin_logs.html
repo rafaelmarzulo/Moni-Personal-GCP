@@ -2,189 +2,231 @@
 
 {% block title %}Logs do Sistema{% endblock %}
 
-{% block head %}
+{% block page_title %}Logs do Sistema{% endblock %}
+
+{% block page_subtitle %}Monitoramento e diagnóstico do sistema MoniPersonal{% endblock %}
+
+{% block head_extra %}
 <style>
 .log-entry {
     border-left: 4px solid;
     margin-bottom: 0.5rem;
     transition: all 0.2s;
+    color: #ffffff !important;
 }
 
 .log-entry:hover {
     transform: translateX(5px);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 8px rgba(111, 66, 193, 0.3);
 }
 
 .log-level-INFO {
     border-left-color: #17a2b8;
-    background-color: rgba(23, 162, 184, 0.1);
+    background-color: rgba(23, 162, 184, 0.2) !important;
 }
 
 .log-level-DEBUG {
     border-left-color: #6c757d;
-    background-color: rgba(108, 117, 125, 0.1);
+    background-color: rgba(108, 117, 125, 0.2) !important;
 }
 
 .log-level-ERROR {
     border-left-color: #dc3545;
-    background-color: rgba(220, 53, 69, 0.1);
+    background-color: rgba(220, 53, 69, 0.2) !important;
 }
 
 .log-level-WARNING {
     border-left-color: #ffc107;
-    background-color: rgba(255, 193, 7, 0.1);
+    background-color: rgba(255, 193, 7, 0.2) !important;
 }
 
 .log-timestamp {
     font-family: 'Courier New', monospace;
     font-size: 0.85rem;
-    color: #6c757d;
+    color: rgba(255, 255, 255, 0.7) !important;
 }
 
 .log-message {
     font-family: 'Courier New', monospace;
     font-size: 0.9rem;
     word-break: break-word;
+    color: #ffffff !important;
 }
 
 .badge-level {
     font-size: 0.7rem;
     min-width: 60px;
 }
+
+/* Garantir que cards tenham fundo dark */
+.card {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: #ffffff !important;
+}
+
+.card-header {
+    background: var(--gradient-main) !important;
+    color: #ffffff !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.card-body {
+    background: rgba(255, 255, 255, 0.05) !important;
+    color: #ffffff !important;
+}
+
+.card-footer {
+    background: rgba(255, 255, 255, 0.05) !important;
+    color: rgba(255, 255, 255, 0.7) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Inputs com tema dark */
+.form-control, .form-select {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    color: #ffffff !important;
+}
+
+.form-control:focus, .form-select:focus {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    border-color: var(--primary-purple) !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25) !important;
+}
+
+.input-group-text {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    color: #ffffff !important;
+}
+
+/* Empty state */
+.text-muted {
+    color: rgba(255, 255, 255, 0.6) !important;
+}
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid mt-4">
-    <div class="row">
-        <div class="col-12">
-            <!-- Header -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="h3 mb-0">
-                    <i class="bi bi-bug-fill text-info me-2"></i>
-                    Logs do Sistema
-                </h2>
-                <div>
-                    <span class="badge bg-secondary me-2">
-                        <i class="bi bi-clock"></i> Últimos {{ total_logs }} registros
-                    </span>
-                    <button class="btn btn-outline-primary btn-sm" onclick="location.reload()">
-                        <i class="bi bi-arrow-clockwise"></i> Atualizar
-                    </button>
-                </div>
-            </div>
+<!-- Header Actions -->
+<div class="d-flex justify-content-end align-items-center mb-4">
+    <span class="badge bg-secondary me-2">
+        <i class="bi bi-clock"></i> Últimos {{ total_logs }} registros
+    </span>
+    <button class="btn btn-outline-primary btn-sm" onclick="location.reload()">
+        <i class="bi bi-arrow-clockwise"></i> Atualizar
+    </button>
+</div>
 
-            <!-- Filtros -->
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <div class="input-group">
-                        <span class="input-group-text">
-                            <i class="bi bi-search"></i>
+<!-- Filtros -->
+<div class="row mb-3">
+    <div class="col-md-6">
+        <div class="input-group">
+            <span class="input-group-text">
+                <i class="bi bi-search"></i>
+            </span>
+            <input type="text" id="searchLogs" class="form-control" placeholder="Buscar nos logs...">
+        </div>
+    </div>
+    <div class="col-md-6">
+        <select id="levelFilter" class="form-select">
+            <option value="">Todos os níveis</option>
+            <option value="ERROR">Apenas ERRORS</option>
+            <option value="WARNING">Apenas WARNINGS</option>
+            <option value="INFO">Apenas INFO</option>
+            <option value="DEBUG">Apenas DEBUG</option>
+        </select>
+    </div>
+</div>
+
+<!-- Container de Logs -->
+<div class="card admin-card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="bi bi-list-ul"></i> Registros de Log
+        </h5>
+    </div>
+    <div class="card-body p-0">
+        {% if logs %}
+        <div id="logsContainer" style="max-height: 70vh; overflow-y: auto;">
+            {% for log in logs %}
+            <div class="log-entry log-level-{{ log.level }} p-3 border-bottom" data-level="{{ log.level }}">
+                <div class="row align-items-center">
+                    <div class="col-auto">
+                        <span class="badge badge-level
+                            {% if log.level == 'ERROR' %}bg-danger
+                            {% elif log.level == 'WARNING' %}bg-warning text-dark
+                            {% elif log.level == 'INFO' %}bg-info
+                            {% elif log.level == 'DEBUG' %}bg-secondary
+                            {% else %}bg-light text-dark{% endif %}">
+                            {{ log.level }}
                         </span>
-                        <input type="text" id="searchLogs" class="form-control" placeholder="Buscar nos logs...">
                     </div>
-                </div>
-                <div class="col-md-6">
-                    <select id="levelFilter" class="form-select">
-                        <option value="">Todos os níveis</option>
-                        <option value="ERROR">Apenas ERRORS</option>
-                        <option value="WARNING">Apenas WARNINGS</option>
-                        <option value="INFO">Apenas INFO</option>
-                        <option value="DEBUG">Apenas DEBUG</option>
-                    </select>
+                    <div class="col-auto">
+                        <div class="log-timestamp">
+                            {{ log.timestamp }}
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="log-message">
+                            {{ log.message }}
+                        </div>
+                    </div>
                 </div>
             </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-inbox display-1 text-muted"></i>
+            <h4 class="text-muted mt-3">Nenhum log encontrado</h4>
+            <p class="text-muted">O sistema ainda não gerou logs ou eles foram limpos.</p>
+        </div>
+        {% endif %}
+    </div>
+    {% if logs %}
+    <div class="card-footer text-muted">
+        <small>
+            <i class="bi bi-info-circle"></i>
+            Mostrando os últimos {{ total_logs }} logs do sistema.
+            Os logs são mantidos em memória e são perdidos quando o serviço é reiniciado.
+        </small>
+    </div>
+    {% endif %}
+</div>
 
-            <!-- Container de Logs -->
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="bi bi-list-ul"></i> Registros de Log
-                    </h5>
-                </div>
-                <div class="card-body p-0">
-                    {% if logs %}
-                    <div id="logsContainer" style="max-height: 70vh; overflow-y: auto;">
-                        {% for log in logs %}
-                        <div class="log-entry log-level-{{ log.level }} p-3 border-bottom" data-level="{{ log.level }}">
-                            <div class="row align-items-center">
-                                <div class="col-auto">
-                                    <span class="badge badge-level
-                                        {% if log.level == 'ERROR' %}bg-danger
-                                        {% elif log.level == 'WARNING' %}bg-warning text-dark
-                                        {% elif log.level == 'INFO' %}bg-info
-                                        {% elif log.level == 'DEBUG' %}bg-secondary
-                                        {% else %}bg-light text-dark{% endif %}">
-                                        {{ log.level }}
-                                    </span>
-                                </div>
-                                <div class="col-auto">
-                                    <div class="log-timestamp">
-                                        {{ log.timestamp }}
-                                    </div>
-                                </div>
-                                <div class="col">
-                                    <div class="log-message">
-                                        {{ log.message }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% else %}
-                    <div class="text-center py-5">
-                        <i class="bi bi-inbox display-1 text-muted"></i>
-                        <h4 class="text-muted mt-3">Nenhum log encontrado</h4>
-                        <p class="text-muted">O sistema ainda não gerou logs ou eles foram limpos.</p>
-                    </div>
-                    {% endif %}
-                </div>
-                {% if logs %}
-                <div class="card-footer text-muted">
-                    <small>
-                        <i class="bi bi-info-circle"></i>
-                        Mostrando os últimos {{ total_logs }} logs do sistema.
-                        Os logs são mantidos em memória e são perdidos quando o serviço é reiniciado.
-                    </small>
-                </div>
-                {% endif %}
+<!-- Estatísticas rápidas -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body text-center">
+                <h5 id="errorCount">0</h5>
+                <small>Errors</small>
             </div>
-
-            <!-- Estatísticas rápidas -->
-            <div class="row mt-4">
-                <div class="col-md-3">
-                    <div class="card bg-danger text-white">
-                        <div class="card-body text-center">
-                            <h5 id="errorCount">0</h5>
-                            <small>Errors</small>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card bg-warning text-dark">
-                        <div class="card-body text-center">
-                            <h5 id="warningCount">0</h5>
-                            <small>Warnings</small>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card bg-info text-white">
-                        <div class="card-body text-center">
-                            <h5 id="infoCount">0</h5>
-                            <small>Info</small>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card bg-secondary text-white">
-                        <div class="card-body text-center">
-                            <h5 id="debugCount">0</h5>
-                            <small>Debug</small>
-                        </div>
-                    </div>
-                </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-dark">
+            <div class="card-body text-center">
+                <h5 id="warningCount">0</h5>
+                <small>Warnings</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <h5 id="infoCount">0</h5>
+                <small>Info</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-secondary text-white">
+            <div class="card-body text-center">
+                <h5 id="debugCount">0</h5>
+                <small>Debug</small>
             </div>
         </div>
     </div>
