@@ -54,22 +54,41 @@ async def meu_historico(
             return RedirectResponse(url="/login")
 
         # Buscar avaliações do aluno
-        avaliacoes = db.query(Avaliacao).filter(
+        avaliacoes_raw = db.query(Avaliacao).filter(
             Avaliacao.aluno_id == aluno_id
         ).order_by(Avaliacao.data.desc()).all()
 
-        # Converter timestamps para timezone local
-        for avaliacao in avaliacoes:
-            if avaliacao.data:
-                avaliacao.data_local = utc_to_sao_paulo(avaliacao.data)
+        # Converter objetos Avaliacao para dicionários para evitar erro de serialização JSON
+        avaliacoes = []
+        for av in avaliacoes_raw:
+            avaliacao_dict = {
+                'id': av.id,
+                'peso_kg': av.peso_kg,
+                'altura_cm': av.altura_cm,
+                'imc': av.imc,
+                'data': av.data,
+                'data_local': utc_to_sao_paulo(av.data) if av.data else None,
+                'observacoes_medidas': av.observacoes_medidas,
+                'percentual_gordura': av.percentual_gordura,
+                'circunferencia_cintura': av.circunferencia_cintura,
+                'circunferencia_quadril': av.circunferencia_quadril
+            }
+            avaliacoes.append(avaliacao_dict)
 
         info_log(f"📊 HISTORICO: {len(avaliacoes)} avaliações para {aluno.nome}")
+
+        # Converter aluno para dicionário também
+        aluno_dict = {
+            'id': aluno.id,
+            'nome': aluno.nome,
+            'email': aluno.email
+        }
 
         return templates.TemplateResponse(
             "meu_historico.html",
             {
                 "request": request,
-                "aluno": aluno,
+                "aluno": aluno_dict,
                 "avaliacoes": avaliacoes,
                 "total_avaliacoes": len(avaliacoes),
                 "is_admin": False
