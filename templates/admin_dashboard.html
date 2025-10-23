@@ -1,17 +1,21 @@
-{% extends "base.html" %}
+{% extends "admin_layout.html" %}
 
-{% block title %}Dashboard Administrativo - {{ super() }}{% endblock %}
+{% block title %}Dashboard Administrativo • MoniPersonal{% endblock %}
+
+{% block page_title %}Dashboard Administrativo{% endblock %}
+
+{% block page_subtitle %}Visão geral do sistema MoniPersonal{% endblock %}
 
 {% block head_extra %}
 <style>
-  .dashboard-card {
+  .admin-card {
     background: rgba(255, 255, 255, 0.08) !important;
     backdrop-filter: blur(15px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     transition: all 0.3s ease;
   }
 
-  .dashboard-card:hover {
+  .admin-card:hover {
     background: rgba(255, 255, 255, 0.12) !important;
     transform: translateY(-3px);
     box-shadow: 0 12px 40px rgba(111, 66, 193, 0.25) !important;
@@ -88,20 +92,10 @@
   </div>
 </div>
 
-<div class="row mb-4">
-  <div class="col">
-    <h2 class="h3 mb-0">
-      <i class="bi bi-speedometer2 me-2"></i>
-      Dashboard Administrativo
-    </h2>
-    <p class="text-muted mb-0">Visão geral do sistema MoniPersonal</p>
-  </div>
-</div>
-
 <!-- Status Cards -->
 <div class="row g-4 mb-5" id="statsSection">
   <div class="col-12 col-sm-6 col-lg-3">
-    <div class="card dashboard-card h-100">
+    <div class="card admin-card h-100">
       <div class="card-body text-center">
         <div class="stat-icon bg-primary bg-opacity-20 mx-auto">
           <i class="bi bi-people text-primary"></i>
@@ -113,7 +107,7 @@
   </div>
 
   <div class="col-12 col-sm-6 col-lg-3">
-    <div class="card dashboard-card h-100">
+    <div class="card admin-card h-100">
       <div class="card-body text-center">
         <div class="stat-icon bg-success bg-opacity-20 mx-auto">
           <i class="bi bi-check-circle text-success"></i>
@@ -125,7 +119,7 @@
   </div>
 
   <div class="col-12 col-sm-6 col-lg-3">
-    <div class="card dashboard-card h-100">
+    <div class="card admin-card h-100">
       <div class="card-body text-center">
         <div class="stat-icon bg-warning bg-opacity-20 mx-auto">
           <i class="bi bi-activity text-warning"></i>
@@ -137,7 +131,7 @@
   </div>
 
   <div class="col-12 col-sm-6 col-lg-3">
-    <div class="card dashboard-card h-100">
+    <div class="card admin-card h-100">
       <div class="card-body text-center">
         <div class="stat-icon bg-info bg-opacity-20 mx-auto">
           <i class="bi bi-calendar-week text-info"></i>
@@ -193,7 +187,7 @@
 <!-- Estatísticas Avançadas -->
 <div class="row mb-5">
   <div class="col-md-6">
-    <div class="card dashboard-card">
+    <div class="card admin-card">
       <div class="card-header">
         <h5 class="mb-0">
           <i class="bi bi-graph-up me-2"></i>
@@ -235,7 +229,7 @@
   </div>
 
   <div class="col-md-6">
-    <div class="card dashboard-card">
+    <div class="card admin-card">
       <div class="card-header">
         <h5 class="mb-0">
           <i class="bi bi-pie-chart me-2"></i>
@@ -269,7 +263,7 @@
 <!-- Top Alunos -->
 <div class="row mb-5">
   <div class="col-12">
-    <div class="card dashboard-card">
+    <div class="card admin-card">
       <div class="card-header">
         <h5 class="mb-0">
           <i class="bi bi-trophy me-2"></i>
@@ -288,7 +282,7 @@
 <!-- System Status -->
 <div class="row">
   <div class="col-12">
-    <div class="card dashboard-card">
+    <div class="card admin-card">
       <div class="card-header">
         <h5 class="mb-0">
           <i class="bi bi-gear me-2"></i>
