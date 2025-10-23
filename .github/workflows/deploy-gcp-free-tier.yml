@@ -107,6 +107,11 @@ jobs:
         run: |
           gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
 
+      - name: DEBUG - Tentar acessar o bucket do Cloud Build
+        run: |
+          echo "Tentando listar o bucket de fontes do Cloud Build..."
+          gcloud storage ls gs://${{ env.PROJECT_ID }}_cloudbuild || echo "Falha ao listar, como esperado."
+
       - name: Build and push Docker image
         run: |
           IMAGE_TAG=$(git rev-parse --short HEAD)
