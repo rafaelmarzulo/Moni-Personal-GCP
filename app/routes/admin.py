@@ -613,3 +613,52 @@ async def admin_criar_avaliacao(
     except Exception as e:
         error_log(f"❌ ADMIN/CRIAR-AVALIACAO: Erro: {str(e)}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
+
+
+@router.get("/avaliacao/{avaliacao_id}")
+@require_admin()
+async def admin_detalhes_avaliacao(
+    avaliacao_id: int,
+    db: Session = Depends(get_db),
+    session_data=None,
+    jwt_data=None
+):
+    """Buscar detalhes de uma avaliação específica"""
+    try:
+        debug_log(f"🔍 ADMIN/AVALIACAO-DETALHES: Buscando avaliação ID {avaliacao_id}")
+
+        # Buscar avaliação
+        avaliacao = db.query(Avaliacao).filter(Avaliacao.id == avaliacao_id).first()
+        if not avaliacao:
+            debug_log(f"❌ ADMIN/AVALIACAO-DETALHES: Avaliação ID {avaliacao_id} não encontrada")
+            raise HTTPException(status_code=404, detail="Avaliação não encontrada")
+
+        # Buscar dados do aluno
+        aluno = db.query(Aluno).filter(Aluno.id == avaliacao.aluno_id).first()
+
+        # Converter datetime para formato local
+        data_local = utc_to_sao_paulo(avaliacao.data) if avaliacao.data else None
+
+        # Preparar dados para retorno
+        resultado = {
+            "id": avaliacao.id,
+            "aluno_nome": avaliacao.nome or (aluno.nome if aluno else "N/A"),
+            "aluno_email": aluno.email if aluno else "N/A",
+            "data": data_local.strftime('%d/%m/%Y %H:%M') if data_local else "N/A",
+            "peso_kg": float(avaliacao.peso_kg) if avaliacao.peso_kg else None,
+            "altura_cm": float(avaliacao.altura_cm) if avaliacao.altura_cm else None,
+            "imc": float(avaliacao.imc) if avaliacao.imc else None,
+            "observacoes_medidas": avaliacao.observacoes_medidas or "",
+            "percentual_gordura": float(avaliacao.percentual_gordura) if avaliacao.percentual_gordura else None,
+            "circunferencia_cintura": float(avaliacao.circunferencia_cintura) if avaliacao.circunferencia_cintura else None,
+            "circunferencia_quadril": float(avaliacao.circunferencia_quadril) if avaliacao.circunferencia_quadril else None
+        }
+
+        info_log(f"✅ ADMIN/AVALIACAO-DETALHES: Retornando dados da avaliação ID {avaliacao_id}")
+        return JSONResponse(content=resultado)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        error_log(f"❌ ADMIN/AVALIACAO-DETALHES: Erro: {str(e)}")
+        raise HTTPException(status_code=500, detail="Erro interno do servidor")
