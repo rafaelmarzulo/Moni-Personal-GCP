@@ -15,8 +15,23 @@ print(f"🔍 Is PostgreSQL: {DATABASE_URL.startswith('postgresql')}")
 
 # Se for PostgreSQL na produção
 if DATABASE_URL.startswith("postgresql"):
-    print("✅ Usando PostgreSQL")
-    engine = create_engine(DATABASE_URL, echo=False)
+    print("✅ Usando PostgreSQL (Supabase)")
+
+    # Configuração específica para Supabase
+    engine = create_engine(
+        DATABASE_URL,
+        echo=False,
+        pool_size=3,  # Reduzir para Free Tier
+        max_overflow=5,
+        pool_pre_ping=True,
+        pool_recycle=3600,  # 1 hora
+        connect_args={
+            "sslmode": "require",
+            "connect_timeout": 30,
+            "application_name": "monipersonal-api",
+            "options": "-c statement_timeout=30000"  # 30 segundos
+        }
+    )
 else:
     # SQLite
     print("⚠️ Usando SQLite (fallback)")
@@ -35,5 +50,9 @@ def get_db():
     db = SessionLocal()
     try:
         yield db
+    except Exception as e:
+        print(f"❌ Erro na sessão do banco: {str(e)}")
+        db.rollback()
+        raise
     finally:
         db.close()

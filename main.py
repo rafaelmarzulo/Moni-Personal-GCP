@@ -6,6 +6,7 @@ from fastapi import FastAPI, Request, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from datetime import datetime
 import uvicorn
 
 # Importar configurações centralizadas
@@ -80,6 +81,20 @@ app.include_router(student_router, tags=["alunos"])
 async def root(request: Request):
     """Redireciona para a página de login"""
     return RedirectResponse(url="/login")
+
+
+# ==================== HEALTH CHECK ====================
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint para Cloud Run"""
+    try:
+        # Verificar se o banco está acessível
+        with SessionLocal() as db:
+            db.execute("SELECT 1")
+        return {"status": "healthy", "timestamp": datetime.now().isoformat()}
+    except Exception as e:
+        return {"status": "unhealthy", "error": str(e)}
 
 
 # ==================== ROTAS LEGADAS (EM MIGRAÇÃO) ====================
