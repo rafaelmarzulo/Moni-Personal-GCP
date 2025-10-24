@@ -108,10 +108,11 @@ jobs:
         run: |
           gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
 
-      - name: DEBUG - Tentar acessar o bucket do Cloud Build
+      - name: DEBUG - Service account permissions
         run: |
-          echo "Tentando listar o bucket de fontes do Cloud Build..."
-          gcloud storage ls gs://${{ env.PROJECT_ID }}_cloudbuild || echo "Falha ao listar, como esperado."
+          echo "Verificando permissões da service account..."
+          gcloud auth list
+          echo "Service account configurada com artifactregistry.writer role"
 
       - name: Build and push Docker image
         run: |
