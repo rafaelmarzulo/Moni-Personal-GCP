@@ -110,12 +110,12 @@ jobs:
 
       - name: DEBUG - Service account permissions
         run: |
-          echo "Verificando permissões da service account..."
+          echo "✅ Testing new service account permissions..."
           gcloud auth list
           echo "Current service account:"
           gcloud config get-value account
           echo "Testing Artifact Registry access:"
-          gcloud artifacts repositories describe moni-personal-repo --location=us-central1 || echo "Repository access failed"
+          gcloud artifacts repositories describe moni-personal-repo --location=us-central1 && echo "✅ Repository access successful!"
 
       - name: Build and push Docker image
         run: |
