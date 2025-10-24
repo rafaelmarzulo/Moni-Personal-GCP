@@ -514,7 +514,7 @@ Para dúvidas e issues:
 
 **💪 MoniPersonal GCP** - Enterprise-grade Cloud Native Application
 
-**Status**: ✅ Production-ready | 🚀 Showcase project | 🔄 CI/CD Active
+**Status**: ✅ Production-ready | 🚀 Showcase project | 🔄 CI/CD Active | 🔐 SA Fixed
 
 Made with ❤️ by [Rafael Marzulo](https://linkedin.com/in/rafael-marzulo-58b04b31/)
 
