@@ -17,8 +17,9 @@ on:
 
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-  SERVICE_NAME: monipersonal-api
+  SERVICE_NAME: moni-personal-app
   REGION: us-central1
+  REPOSITORY: moni-personal-repo
 
 jobs:
   # Job 1: Testes e Validação
@@ -115,7 +116,7 @@ jobs:
       - name: Build and push Docker image
         run: |
           IMAGE_TAG=$(git rev-parse --short HEAD)
-          IMAGE_NAME="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/monipersonal-images/${{ env.SERVICE_NAME }}:${IMAGE_TAG}"
+          IMAGE_NAME="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE_NAME }}:${IMAGE_TAG}"
 
           # Build local e push para Artifact Registry
           docker build -t "${IMAGE_NAME}" .
