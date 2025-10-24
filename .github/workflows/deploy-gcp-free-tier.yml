@@ -112,7 +112,10 @@ jobs:
         run: |
           echo "Verificando permissões da service account..."
           gcloud auth list
-          echo "Service account configurada com artifactregistry.writer role"
+          echo "Current service account:"
+          gcloud config get-value account
+          echo "Testing Artifact Registry access:"
+          gcloud artifacts repositories describe moni-personal-repo --location=us-central1 || echo "Repository access failed"
 
       - name: Build and push Docker image
         run: |
