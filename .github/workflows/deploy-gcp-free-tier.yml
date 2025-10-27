@@ -18,8 +18,8 @@ on:
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   SERVICE_NAME: moni-personal-app
-  REGION: us-central1
-  REPOSITORY: moni-personal-repo
+  REGION: southamerica-east1
+  REPOSITORY: cloud-run-source-deploy
 
 jobs:
   # Job 1: Testes e Validação
@@ -115,7 +115,7 @@ jobs:
           echo "Current service account:"
           gcloud config get-value account
           echo "Testing Artifact Registry access:"
-          gcloud artifacts repositories describe moni-personal-repo --location=us-central1 && echo "✅ Repository access successful!"
+          gcloud artifacts repositories describe cloud-run-source-deploy --location=southamerica-east1 && echo "✅ Repository access successful!"
 
       - name: Build and push Docker image
         run: |
