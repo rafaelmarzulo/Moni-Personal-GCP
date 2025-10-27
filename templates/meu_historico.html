@@ -273,6 +273,118 @@
       padding: 0.5rem 1rem;
     }
   }
+
+  /* Modal fixes for proper display and interaction */
+  .modal {
+    z-index: 9999 !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  .modal-backdrop {
+    z-index: 9998 !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background-color: rgba(0, 0, 0, 0.7) !important;
+  }
+
+  .modal-content {
+    border: 2px solid rgba(111, 66, 193, 0.3);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    position: relative !important;
+    z-index: 10000 !important;
+  }
+
+  .modal-header {
+    background: linear-gradient(135deg, #6f42c1 0%, #8e44ad 100%);
+    position: relative !important;
+    z-index: 10001 !important;
+  }
+
+  .modal-body {
+    background-color: #1a1a1a;
+    position: relative !important;
+    z-index: 10001 !important;
+  }
+
+  .modal-footer {
+    background-color: #1a1a1a;
+    position: relative !important;
+    z-index: 10001 !important;
+  }
+
+  /* Ensure buttons are clickable */
+  .btn-close {
+    opacity: 1 !important;
+    font-size: 1.2rem !important;
+    background: none !important;
+    border: none !important;
+    position: relative !important;
+    z-index: 10002 !important;
+    cursor: pointer !important;
+    pointer-events: auto !important;
+  }
+
+  .btn-close:hover {
+    opacity: 0.8 !important;
+  }
+
+  .btn-close:focus {
+    box-shadow: 0 0 0 2px #fff !important;
+    outline: none !important;
+  }
+
+  /* Modal buttons */
+  .modal-footer .btn {
+    position: relative !important;
+    z-index: 10002 !important;
+    cursor: pointer !important;
+    pointer-events: auto !important;
+  }
+
+  .modal-footer .btn:hover {
+    transform: translateY(-1px) !important;
+  }
+
+  /* Fix modal dialog positioning */
+  .modal-dialog {
+    margin: 1.5rem auto;
+    max-width: 90%;
+    position: relative !important;
+    z-index: 10000 !important;
+  }
+
+  @media (min-width: 576px) {
+    .modal-dialog {
+      max-width: 540px;
+    }
+  }
+
+  @media (min-width: 992px) {
+    .modal-dialog {
+      max-width: 800px;
+    }
+  }
+
+  /* Force modal visibility when shown */
+  .modal.show {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  /* Disable page scroll when modal is open */
+  body.modal-open {
+    overflow: hidden !important;
+    position: fixed !important;
+    width: 100% !important;
+  }
 </style>
 {% endblock %}
 
@@ -635,6 +747,156 @@
                   </div>
                 </div>
               {% endif %}
+
+              <!-- Action Button -->
+              <div class="col-12">
+                <div class="text-end mt-2">
+                  <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#detailModal{{ loop.index }}">
+                    <i class="bi bi-eye me-1"></i>
+                    Ver Detalhes
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal de Detalhes -->
+        <div class="modal fade" id="detailModal{{ loop.index }}" tabindex="-1" aria-labelledby="detailModalLabel{{ loop.index }}" aria-hidden="true">
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content bg-dark text-white">
+              <div class="modal-header border-secondary">
+                <h5 class="modal-title" id="detailModalLabel{{ loop.index }}">
+                  <i class="bi bi-clipboard-data me-2"></i>
+                  Detalhes da Avaliação -
+                  {% if avaliacao.data_local %}
+                    {{ avaliacao.data_local[:10] | replace('-', '/') }}
+                  {% else %}
+                    {{ avaliacao.data[:10] | replace('-', '/') if avaliacao.data else 'Data não informada' }}
+                  {% endif %}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <div class="row g-4">
+                  <!-- Data e Hora -->
+                  <div class="col-12 col-md-6">
+                    <div class="card bg-transparent border-secondary">
+                      <div class="card-body text-center">
+                        <i class="bi bi-calendar-event text-primary fs-3 mb-2"></i>
+                        <h6 class="card-title">Data e Hora</h6>
+                        <p class="card-text">
+                          <strong>
+                            {% if avaliacao.data_local %}
+                              {{ avaliacao.data_local[:10] | replace('-', '/') }}
+                            {% else %}
+                              {{ avaliacao.data[:10] | replace('-', '/') if avaliacao.data else 'Data não informada' }}
+                            {% endif %}
+                          </strong><br>
+                          <small class="text-muted">
+                            {% if avaliacao.data_local %}
+                              {{ avaliacao.data_local[11:16] }}
+                            {% elif avaliacao.data %}
+                              {{ avaliacao.data[11:16] }}
+                            {% endif %}
+                          </small>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Peso -->
+                  <div class="col-12 col-md-6">
+                    <div class="card bg-transparent border-secondary">
+                      <div class="card-body text-center">
+                        <i class="bi bi-speedometer text-warning fs-3 mb-2"></i>
+                        <h6 class="card-title">Peso</h6>
+                        <p class="card-text">
+                          <strong class="fs-4">{{ "%.1f"|format(avaliacao.peso_kg) if avaliacao.peso_kg else 'N/A' }}</strong>
+                          <small class="text-muted">kg</small>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Altura -->
+                  <div class="col-12 col-md-6">
+                    <div class="card bg-transparent border-secondary">
+                      <div class="card-body text-center">
+                        <i class="bi bi-rulers text-info fs-3 mb-2"></i>
+                        <h6 class="card-title">Altura</h6>
+                        <p class="card-text">
+                          <strong class="fs-4">{{ "%.0f"|format(avaliacao.altura_cm) if avaliacao.altura_cm else 'N/A' }}</strong>
+                          <small class="text-muted">cm</small>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- IMC -->
+                  <div class="col-12 col-md-6">
+                    <div class="card bg-transparent border-secondary">
+                      <div class="card-body text-center">
+                        <i class="bi bi-heart-pulse text-danger fs-3 mb-2"></i>
+                        <h6 class="card-title">IMC</h6>
+                        {% if avaliacao.imc %}
+                          {% set imc_class = "text-success" %}
+                          {% set imc_label = "Normal" %}
+                          {% if avaliacao.imc < 18.5 %}
+                            {% set imc_class = "text-info" %}
+                            {% set imc_label = "Baixo Peso" %}
+                          {% elif avaliacao.imc >= 25 and avaliacao.imc < 30 %}
+                            {% set imc_class = "text-warning" %}
+                            {% set imc_label = "Sobrepeso" %}
+                          {% elif avaliacao.imc >= 30 %}
+                            {% set imc_class = "text-danger" %}
+                            {% set imc_label = "Obesidade" %}
+                          {% endif %}
+                          <p class="card-text">
+                            <strong class="fs-4 {{ imc_class }}">{{ "%.1f"|format(avaliacao.imc) }}</strong><br>
+                            <small class="{{ imc_class }}">{{ imc_label }}</small>
+                          </p>
+                        {% else %}
+                          <p class="card-text">
+                            <span class="text-muted">N/A</span>
+                          </p>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Observações -->
+                  {% if avaliacao.observacoes_medidas %}
+                    <div class="col-12">
+                      <div class="card bg-transparent border-secondary">
+                        <div class="card-body">
+                          <h6 class="card-title">
+                            <i class="bi bi-chat-square-text me-2"></i>
+                            Observações
+                          </h6>
+                          <p class="card-text">{{ avaliacao.observacoes_medidas }}</p>
+                        </div>
+                      </div>
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="modal-footer border-secondary d-flex justify-content-between">
+                <small class="text-muted align-self-center">
+                  <i class="bi bi-info-circle me-1"></i>
+                  Pressione ESC ou clique fora para fechar
+                </small>
+                <div>
+                  <button type="button" class="btn btn-outline-light me-2 force-close-modal" data-modal-id="detailModal{{ loop.index }}">
+                    <i class="bi bi-arrow-left me-1"></i>
+                    Voltar
+                  </button>
+                  <button type="button" class="btn btn-primary force-close-modal" data-modal-id="detailModal{{ loop.index }}">
+                    <i class="bi bi-check-lg me-1"></i>
+                    OK
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -932,6 +1194,126 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }, 5000);
+
+  // Enhanced Modal fix: Ensure proper modal behavior with aggressive fixes
+
+  // Force modal behavior with manual control
+  function forceCloseModal(modalElement) {
+    if (modalElement) {
+      modalElement.style.display = 'none';
+      modalElement.classList.remove('show');
+      modalElement.setAttribute('aria-hidden', 'true');
+      modalElement.removeAttribute('aria-modal');
+
+      // Remove backdrop
+      document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+
+      // Re-enable body scroll
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+    }
+  }
+
+  // Setup modal event listeners
+  document.querySelectorAll('.modal').forEach(modal => {
+    // Add click handler to backdrop
+    modal.addEventListener('click', function(e) {
+      if (e.target === this) {
+        forceCloseModal(this);
+      }
+    });
+
+    // Ensure modals can be closed with Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && modal.classList.contains('show')) {
+        forceCloseModal(modal);
+      }
+    });
+
+    // Fix z-index and positioning on show
+    modal.addEventListener('show.bs.modal', function() {
+      this.style.zIndex = '9999';
+      this.style.position = 'fixed';
+      this.style.top = '0';
+      this.style.left = '0';
+      this.style.width = '100%';
+      this.style.height = '100%';
+      document.body.classList.add('modal-open');
+      document.body.style.overflow = 'hidden';
+    });
+
+    modal.addEventListener('hidden.bs.modal', function() {
+      forceCloseModal(this);
+    });
+  });
+
+  // Add multiple close handlers for modal buttons
+  document.querySelectorAll('[data-bs-dismiss="modal"]').forEach(button => {
+    // Mouse click
+    button.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const modal = this.closest('.modal');
+      forceCloseModal(modal);
+    });
+
+    // Touch events for mobile
+    button.addEventListener('touchend', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const modal = this.closest('.modal');
+      forceCloseModal(modal);
+    });
+
+    // Keyboard events
+    button.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        e.stopPropagation();
+        const modal = this.closest('.modal');
+        forceCloseModal(modal);
+      }
+    });
+  });
+
+  // Global escape key handler
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      const openModal = document.querySelector('.modal.show');
+      if (openModal) {
+        forceCloseModal(openModal);
+      }
+    }
+  });
+
+  // Special handler for force-close-modal buttons
+  document.querySelectorAll('.force-close-modal').forEach(button => {
+    // Multiple event types for maximum compatibility
+    ['click', 'touchend', 'mouseup'].forEach(eventType => {
+      button.addEventListener(eventType, function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+
+        console.log('Force close modal button clicked'); // Debug
+
+        const modalId = this.getAttribute('data-modal-id');
+        const modal = document.getElementById(modalId);
+
+        if (modal) {
+          forceCloseModal(modal);
+        } else {
+          // Fallback: close any open modal
+          const openModal = document.querySelector('.modal.show');
+          if (openModal) {
+            forceCloseModal(openModal);
+          }
+        }
+      });
+    });
+  });
 });
 </script>
 {% endblock %}

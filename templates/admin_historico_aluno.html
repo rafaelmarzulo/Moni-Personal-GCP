@@ -111,6 +111,8 @@
     }
   }
 </style>
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 {% endblock %}
 
 {% block content %}
@@ -157,6 +159,91 @@
 </div>
 
 {% if avaliacoes %}
+  <!-- Enhanced Progress Overview -->
+  <div class="progress-chart mb-4">
+    <h5 class="mb-4 text-center">
+      <i class="bi bi-graph-up me-2"></i>
+      Resumo do Progresso
+    </h5>
+    <div class="row g-3 mb-4">
+      {% if avaliacoes|length > 0 %}
+        {% set latest = avaliacoes[0] %}
+        {% set oldest = avaliacoes[-1] if avaliacoes|length > 1 else avaliacoes[0] %}
+        <div class="col-6 col-md-3">
+          <div class="text-center p-3">
+            <div class="h4 text-primary">{{ "%.1f"|format(latest.peso_kg) if latest.peso_kg else 'N/A' }}</div>
+            <small class="text-muted">Peso Atual (kg)</small>
+            {% if avaliacoes|length > 1 %}
+              {% set peso_diff = latest.peso_kg - oldest.peso_kg if latest.peso_kg and oldest.peso_kg else 0 %}
+              <div class="mt-2">
+                {% if peso_diff > 0 %}
+                  <i class="bi bi-arrow-up text-warning"></i>
+                  <small class="text-warning">+{{ "%.1f"|format(peso_diff) }}kg</small>
+                {% elif peso_diff < 0 %}
+                  <i class="bi bi-arrow-down text-success"></i>
+                  <small class="text-success">{{ "%.1f"|format(peso_diff) }}kg</small>
+                {% else %}
+                  <i class="bi bi-dash text-info"></i>
+                  <small class="text-info">Estável</small>
+                {% endif %}
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="col-6 col-md-3">
+          <div class="text-center p-3">
+            <div class="h4 text-primary">{{ "%.1f"|format(latest.imc) if latest.imc else 'N/A' }}</div>
+            <small class="text-muted">IMC Atual</small>
+            {% if avaliacoes|length > 1 %}
+              {% set imc_diff = latest.imc - oldest.imc if latest.imc and oldest.imc else 0 %}
+              <div class="mt-2">
+                {% if imc_diff > 0 %}
+                  <i class="bi bi-arrow-up text-warning"></i>
+                  <small class="text-warning">+{{ "%.1f"|format(imc_diff) }}</small>
+                {% elif imc_diff < 0 %}
+                  <i class="bi bi-arrow-down text-success"></i>
+                  <small class="text-success">{{ "%.1f"|format(imc_diff) }}</small>
+                {% else %}
+                  <i class="bi bi-dash text-info"></i>
+                  <small class="text-info">Estável</small>
+                {% endif %}
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="col-6 col-md-3">
+          <div class="text-center p-3">
+            <div class="h4 text-primary">{{ avaliacoes|length }}</div>
+            <small class="text-muted">Total Avaliações</small>
+            <div class="mt-2">
+              <i class="bi bi-award text-warning"></i>
+              <small class="text-warning">
+                {% if avaliacoes|length >= 10 %}Excelente!
+                {% elif avaliacoes|length >= 5 %}Bom progresso!
+                {% elif avaliacoes|length >= 3 %}Começando bem!
+                {% else %}Início da jornada
+                {% endif %}
+              </small>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-6 col-md-3">
+          <div class="text-center p-3">
+            <div class="h4 text-primary">{{ "%.0f"|format(latest.altura_cm) if latest.altura_cm else 'N/A' }}</div>
+            <small class="text-muted">Altura (cm)</small>
+            <div class="mt-2">
+              <i class="bi bi-rulers text-info"></i>
+              <small class="text-info">Medida</small>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
   <div class="row">
     <div class="col-12">
       <h4 class="mb-4">
@@ -244,7 +331,8 @@
     </div>
   </div>
 
-  <!-- Progress Chart Placeholder -->
+  <!-- Progress Chart -->
+  {% if avaliacoes|length > 1 %}
   <div class="row mt-5">
     <div class="col-12">
       <div class="card">
@@ -255,17 +343,14 @@
           </h5>
         </div>
         <div class="card-body">
-          <div class="progress-chart d-flex align-items-center justify-content-center">
-            <div class="text-center text-muted">
-              <i class="bi bi-bar-chart fs-1 mb-3 d-block opacity-50"></i>
-              <p class="mb-2">Gráfico de progresso será implementado</p>
-              <small>Visualização de peso, IMC e evolução ao longo do tempo</small>
-            </div>
+          <div class="progress-chart">
+            <canvas id="progressChart" style="max-height: 400px;"></canvas>
           </div>
         </div>
       </div>
     </div>
   </div>
+  {% endif %}
 
 {% else %}
   <!-- Empty State -->
@@ -342,6 +427,190 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   });
+
+  // Initialize Progress Chart
+  {% if avaliacoes|length > 1 %}
+  initProgressChart();
+  {% endif %}
 });
+
+// Progress Chart Implementation
+function initProgressChart() {
+  const ctx = document.getElementById('progressChart');
+  if (!ctx) return;
+
+  // Prepare data from avaliacoes (reverse order for chronological display)
+  const avaliacoes = [
+    {% for avaliacao in avaliacoes|reverse %}
+    {
+      data: '{% if avaliacao.data_local %}{{ avaliacao.data_local.strftime('%Y-%m-%d') }}{% else %}{{ avaliacao.data.strftime('%Y-%m-%d') if avaliacao.data else "N/A" }}{% endif %}',
+      peso: {{ avaliacao.peso_kg if avaliacao.peso_kg else 'null' }},
+      imc: {{ avaliacao.imc if avaliacao.imc else 'null' }},
+      altura: {{ avaliacao.altura_cm if avaliacao.altura_cm else 'null' }}
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ];
+
+  // Extract data for chart
+  const labels = avaliacoes.map(av => {
+    const date = new Date(av.data);
+    return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+  });
+
+  const pesoData = avaliacoes.map(av => av.peso);
+  const imcData = avaliacoes.map(av => av.imc);
+
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Peso (kg)',
+        data: pesoData,
+        borderColor: '#6f42c1',
+        backgroundColor: 'rgba(111, 66, 193, 0.1)',
+        borderWidth: 3,
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: '#6f42c1',
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 2,
+        pointRadius: 6,
+        yAxisID: 'y'
+      }, {
+        label: 'IMC',
+        data: imcData,
+        borderColor: '#ffc107',
+        backgroundColor: 'rgba(255, 193, 7, 0.1)',
+        borderWidth: 3,
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: '#ffc107',
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 2,
+        pointRadius: 6,
+        yAxisID: 'y1'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        title: {
+          display: true,
+          text: 'Evolução do Peso e IMC',
+          color: '#ffffff',
+          font: {
+            size: 16,
+            weight: 'bold'
+          }
+        },
+        legend: {
+          labels: {
+            color: '#ffffff',
+            usePointStyle: true,
+            padding: 20
+          }
+        },
+        tooltip: {
+          mode: 'index',
+          intersect: false,
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          titleColor: '#ffffff',
+          bodyColor: '#ffffff',
+          borderColor: '#6f42c1',
+          borderWidth: 1,
+          callbacks: {
+            title: function(context) {
+              const index = context[0].dataIndex;
+              return 'Avaliação: ' + avaliacoes[index].data.split('-').reverse().join('/');
+            },
+            label: function(context) {
+              let label = context.dataset.label || '';
+              if (label) {
+                label += ': ';
+              }
+              if (context.parsed.y !== null) {
+                label += context.parsed.y.toFixed(1);
+                if (context.dataset.label === 'Peso (kg)') {
+                  label += ' kg';
+                } else if (context.dataset.label === 'IMC') {
+                  // Add IMC classification
+                  const imc = context.parsed.y;
+                  let classification = '';
+                  if (imc < 18.5) classification = ' (Baixo Peso)';
+                  else if (imc < 25) classification = ' (Normal)';
+                  else if (imc < 30) classification = ' (Sobrepeso)';
+                  else classification = ' (Obesidade)';
+                  label += classification;
+                }
+              }
+              return label;
+            }
+          }
+        }
+      },
+      interaction: {
+        mode: 'nearest',
+        axis: 'x',
+        intersect: false
+      },
+      scales: {
+        x: {
+          display: true,
+          title: {
+            display: true,
+            text: 'Data da Avaliação',
+            color: '#ffffff'
+          },
+          ticks: {
+            color: '#ffffff'
+          },
+          grid: {
+            color: 'rgba(255, 255, 255, 0.1)'
+          }
+        },
+        y: {
+          type: 'linear',
+          display: true,
+          position: 'left',
+          title: {
+            display: true,
+            text: 'Peso (kg)',
+            color: '#6f42c1'
+          },
+          ticks: {
+            color: '#6f42c1'
+          },
+          grid: {
+            color: 'rgba(111, 66, 193, 0.1)'
+          }
+        },
+        y1: {
+          type: 'linear',
+          display: true,
+          position: 'right',
+          title: {
+            display: true,
+            text: 'IMC',
+            color: '#ffc107'
+          },
+          ticks: {
+            color: '#ffc107'
+          },
+          grid: {
+            drawOnChartArea: false,
+            color: 'rgba(255, 193, 7, 0.1)'
+          }
+        }
+      },
+      elements: {
+        point: {
+          hoverRadius: 8
+        }
+      }
+    }
+  });
+}
 </script>
 {% endblock %}

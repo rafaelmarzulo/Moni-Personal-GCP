@@ -147,6 +147,7 @@ async def admin_lista_alunos(
 
 
 @router.get("/aluno/{nome}", response_class=HTMLResponse)
+@router.get("/aluno/{nome}/", response_class=HTMLResponse)
 @require_admin()
 async def admin_historico_aluno(
     request: Request,
@@ -157,10 +158,24 @@ async def admin_historico_aluno(
 ):
     """Exibe histórico de um aluno específico (rota protegida)"""
     try:
-        debug_log(f"🎯 ADMIN/ALUNO/{nome}: Carregando histórico")
+        # Decodificar URL e tratar caracteres especiais
+        import urllib.parse
+        nome_decodificado = urllib.parse.unquote(nome)
+        debug_log(f"🎯 ADMIN/ALUNO/{nome_decodificado}: Carregando histórico")
 
-        # Buscar aluno
-        aluno = db.query(Aluno).filter(Aluno.nome.ilike(f"%{nome}%")).first()
+        # Buscar aluno com nome exato ou similar
+        aluno = db.query(Aluno).filter(
+            Aluno.nome.ilike(f"%{nome_decodificado}%")
+        ).first()
+
+        # Se não encontrar, tentar sem acentos
+        if not aluno:
+            # Remover acentos para busca mais flexível
+            import unicodedata
+            nome_sem_acentos = unicodedata.normalize('NFD', nome_decodificado).encode('ascii', 'ignore').decode('ascii')
+            aluno = db.query(Aluno).filter(
+                Aluno.nome.ilike(f"%{nome_sem_acentos}%")
+            ).first()
 
         if not aluno:
             raise HTTPException(status_code=404, detail="Aluno não encontrado")
@@ -236,6 +251,25 @@ async def admin_debug_alunos(
         return {"error": f"Erro ao verificar alunos: {str(e)}"}
 
 
+@router.get("/test-db")
+async def test_database_connection(db: Session = Depends(get_db)):
+    """Endpoint de teste para verificar conexão com banco sem autenticação"""
+    try:
+        debug_log("🔧 TEST-DB: Testando conexão básica")
+        from sqlalchemy import text
+        result = db.execute(text("SELECT 1 as test")).fetchone()
+        total_alunos = db.query(Aluno).count()
+        return {
+            "success": True,
+            "database_test": result.test if result else None,
+            "total_alunos": total_alunos,
+            "timestamp": now_sao_paulo().isoformat()
+        }
+    except Exception as e:
+        error_log(f"❌ TEST-DB: Erro: {str(e)}")
+        return {"error": str(e), "success": False}
+
+
 @router.get("/stats")
 @require_admin()
 async def admin_estatisticas(
@@ -246,12 +280,41 @@ async def admin_estatisticas(
 ):
     """Estatísticas detalhadas do sistema"""
     try:
-        debug_log("📊 ADMIN/STATS: Calculando estatísticas detalhadas")
+        debug_log("📊 ADMIN/STATS: Iniciando cálculo de estatísticas detalhadas")
+
+        # Testar conexão com banco primeiro
+        try:
+            from sqlalchemy import text
+            db.execute(text("SELECT 1")).fetchone()
+            debug_log("✅ ADMIN/STATS: Conexão com banco OK")
+        except Exception as e:
+            error_log(f"❌ ADMIN/STATS: Falha na conexão com banco: {str(e)}")
+            raise HTTPException(status_code=500, detail="Erro de conexão com banco de dados")
 
         # Estatísticas básicas
-        total_alunos = db.query(Aluno).count()
-        total_avaliacoes = db.query(Avaliacao).count()
-        alunos_ativos = db.query(Aluno).filter(Aluno.ativo == True).count()
+        try:
+            debug_log("📊 ADMIN/STATS: Calculando total de alunos")
+            total_alunos = db.query(Aluno).count()
+            debug_log(f"✅ ADMIN/STATS: Total alunos: {total_alunos}")
+        except Exception as e:
+            error_log(f"❌ ADMIN/STATS: Erro ao contar alunos: {str(e)}")
+            total_alunos = 0
+
+        try:
+            debug_log("📊 ADMIN/STATS: Calculando total de avaliações")
+            total_avaliacoes = db.query(Avaliacao).count()
+            debug_log(f"✅ ADMIN/STATS: Total avaliações: {total_avaliacoes}")
+        except Exception as e:
+            error_log(f"❌ ADMIN/STATS: Erro ao contar avaliações: {str(e)}")
+            total_avaliacoes = 0
+
+        try:
+            debug_log("📊 ADMIN/STATS: Calculando alunos ativos")
+            alunos_ativos = db.query(Aluno).filter(Aluno.ativo == True).count()
+            debug_log(f"✅ ADMIN/STATS: Alunos ativos: {alunos_ativos}")
+        except Exception as e:
+            error_log(f"❌ ADMIN/STATS: Erro ao contar alunos ativos: {str(e)}")
+            alunos_ativos = 0
 
         # Avaliações recentes (últimos 30 dias)
         from datetime import timedelta
@@ -298,18 +361,26 @@ async def admin_estatisticas(
         # Média de avaliações por aluno
         media_avaliacoes = total_avaliacoes / total_alunos if total_alunos > 0 else 0
 
-        # Alunos com progresso (mais de 1 avaliação)
-        alunos_com_progresso = db.query(Aluno.id).join(Avaliacao).group_by(Aluno.id).having(
-            func.count(Avaliacao.id) > 1
-        ).count()
+        # Alunos com progresso (mais de 1 avaliação) - Query otimizada
+        try:
+            alunos_com_progresso = db.query(Aluno.id).join(Avaliacao).group_by(Aluno.id).having(
+                func.count(Avaliacao.id) > 1
+            ).count()
+        except Exception as e:
+            error_log(f"❌ Erro ao calcular alunos com progresso: {str(e)}")
+            alunos_com_progresso = 0
 
-        # Top 5 alunos mais ativos (por número de avaliações)
-        top_alunos = db.query(
-            Aluno.nome,
-            func.count(Avaliacao.id).label('total_avaliacoes')
-        ).join(Avaliacao).group_by(Aluno.id, Aluno.nome).order_by(
-            func.count(Avaliacao.id).desc()
-        ).limit(5).all()
+        # Top 5 alunos mais ativos (por número de avaliações) - Query otimizada
+        try:
+            top_alunos = db.query(
+                Aluno.nome,
+                func.count(Avaliacao.id).label('total_avaliacoes')
+            ).join(Avaliacao).group_by(Aluno.id, Aluno.nome).order_by(
+                func.count(Avaliacao.id).desc()
+            ).limit(5).all()
+        except Exception as e:
+            error_log(f"❌ Erro ao calcular top alunos: {str(e)}")
+            top_alunos = []
 
         stats = {
             "total_alunos": total_alunos,
