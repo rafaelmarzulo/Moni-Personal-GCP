@@ -21,7 +21,7 @@ on:
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   REGION: southamerica-east1
-  REPOSITORY: cloud-run-source-deploy
+  REPOSITORY: moni-personal-repo
   IMAGE_NAME: moni-personal-app
 
 jobs:
